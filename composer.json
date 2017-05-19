@@ -1,0 +1,31 @@
+{
+    "name": "telltale/models",
+    "description": "Models that match our data structure",
+    "type": "library",
+    "authors": [
+        {
+            "name": "jwagstaff",
+            "email": "jwagstaff@telltalegames.com"
+        }
+    ],
+    "require": {
+        "psr/cache": "@stable",
+        "php": ">=7"
+    },
+    "require-dev": {
+      "phpunit/phpunit": "@stable",
+      "phpmd/phpmd" : "@stable"
+    },
+    "autoload": {
+		"psr-4": {
+			"Telltale\\DataMapper\\": "src/DataMapper",
+			"Telltale\\Model\\": "src/Model"
+		}
+	},
+    "autoload-dev": {
+		"psr-4": {
+			"Telltale\\DataMapper\\Tests\\": "tests",
+			"Telltale\\Model\\Tests\\": "tests"
+		}
+	}
+}
