@@ -118,23 +118,27 @@ class Entitlement {
     * 
     * @param string $code
     * @param int $userId
-    * @return EntitlementModel $entitlement
+    * @throws PDOException
+    * @return array of EntitlementModel $entitlementsAdded
     */
-  public function redeem(string $code, int $userId) {
+  public function redeem(string $code, int $userId): array {
 
     if (strlen($code) > 255) {
-      return false;
+      throw new PDOException('Invalid entitlement code');
     }
 
     // Check whether this code was found and has not been previously redeemed
     $entitlement = $this->findByCode($code);
 
     if (!$entitlement) {
-      return false;
+      return [];
     }
 
     // Assign this entitlement to the user
     $entitlement->setUserId($userId);
+
+    // Future support for single codes adding multiple entitlements
+     $entitlementsAdded = [$entitlement];
 
     // Attempt to create the entitlement
     $this->add($entitlement);
@@ -142,7 +146,7 @@ class Entitlement {
     // Mark entitlement as used
     $this->markAsUsed($entitlement);
 
-    return $entitlement;
+    return $entitlementsAdded;
   }
 
   /**
