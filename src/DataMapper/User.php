@@ -4,6 +4,7 @@ namespace Telltale\DataMapper;
 use Telltale\Model\User as UserModel;
 use PDO;
 use PDOException;
+use Psr\Cache\CacheItemPoolInterface;
 
 class User {
 
@@ -28,9 +29,11 @@ class User {
   ';
 
   private $pdo;
+  private $cache;
 
-  public function __construct(PDO $pdo) {
+  public function __construct(PDO $pdo, CacheItemPoolInterface $cachePool) {
     $this->pdo = $pdo;
+    $this->cache = $cachePool;
   }
 
   /**
@@ -41,6 +44,13 @@ class User {
     * @return UserModel|bool
     */
   public function get(int $userId) {
+    $cacheItem = $this->cache->getItem('users|' . $userId);
+
+    // Return user from cache if found
+    $user = $cacheItem->get();
+    if ($user) {
+      return $user;
+    }
 
     $statement = $this->pdo->prepare(
       'SELECT ' . self::FIELDS . '
@@ -50,7 +60,17 @@ class User {
 
     $statement->setFetchMode(PDO::FETCH_CLASS, UserModel::class);
     $statement->execute(['id' => $userId]);
-    return $statement->fetch();
+    $user = $statement->fetch();
+
+    // Set user cache length
+    $exp = new \DateInterval('P1D');
+    $cacheItem->expiresAfter($exp);
+
+    // Save user into cache
+    $cacheItem->set($user);
+    $this->cache->save($cacheItem);
+
+    return $user;
   }
 
   /**
@@ -140,6 +160,9 @@ class User {
     $user->setId($this->pdo->lastInsertId());
     $user->setLastLogin('now');
 
+    // Cache the user
+    $this->cacheUser($user);
+
     return $user;
   }
 
@@ -167,35 +190,69 @@ class User {
     // Always update updated_at unless only the update is last_login_at
     if (false === (in_array('last_login_at', $queryHelper['keys']) && count($queryHelper['keys']) == 1)) {
       $placeholders .= ',updated_at=NOW()';
+      $user->setLastLogin('now');
     }
+
+    // Update the cached user record
+    $this->cacheUser($user);
 
     $statement = $this->pdo->prepare("UPDATE users SET {$placeholders} WHERE id = ?");
     return $statement->execute($queryHelper['values']);
   }
 
   /**
-    * Has a user record been updated since $datetime
+    * Get a user by their auth token
     *
-    * @param int $user ID
-    * @param string datetime
-    * @return bool
+    * @throws Exception If token mismatch
+    * @param string $token
+    * @return UserModel
     */
-  public function hasUpdated(int $userId, string $datetime): bool {
-    $statement = $this->pdo->prepare(
-      'SELECT 1
-      FROM users
-      WHERE id = :id AND updated_at > :last_updated'
-    );
+  public function fromToken(string $token) {
+    // $time: When the token was issued
+    // $hash: Used to sign the token
+    list($userId, $time, $hash) = explode(',', $token);
 
-    // Validate and format datetime
-    $datetime = new DateTime($datetime);
-    $datetime = $datetime->format('Y-m-d H:i:s');
+    if (!((int)$userId > 0 && $time && $hash)) {
+      throw new \Exception('Invalid User Token');
+    }
 
-    $statement->execute([
-      'id' => $userId,
-      'last_updated' => $datetime,
-    ]);
-    return (bool)$statement->fetchColumn();
+    $user = $this->get($userId);
+
+    if (!$user) {
+      throw new \Exception('User Not Found');
+    }
+
+    // User must be enabled
+    if ($user->getDisabled()) {
+      throw new \Exception('Account Disabled');
+    }
+
+    // Token must still match the user's
+    $expectedToken = $user->authToken($time);
+    if (!hash_equals($token,$expectedToken)) {
+      throw new \Exception('Token Validation Failed');
+    }
+    
+    return $user;
+  }
+
+  /**
+    * Cache the user record
+    *
+    * @param UserModel $user
+    * @return CacheItemPoolInterface
+    */
+  private function cacheUser(UserModel $user) {
+    $cacheItem = $this->cache->getItem('users|' . $user->getId());
+
+    // Set user cache length
+    $exp = new \DateInterval('P1D');
+    $cacheItem->expiresAfter($exp);
+
+    // Save user into cache
+    $cacheItem->set($user);
+    $this->cache->save($cacheItem);
+    return $cacheItem;
   }
 
 }

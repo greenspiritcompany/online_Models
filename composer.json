@@ -1,8 +1,9 @@
 {
     "name": "telltale/models",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Models that match our data structure",
     "type": "package",
+    "license": "proprietary",
     "authors": [
         {
             "name": "jwagstaff",
