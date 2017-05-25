@@ -1,5 +1,5 @@
 <?php
-namespace Webapi\Model;
+namespace Telltale\Model;
 use DateTime;
 use Exception;
 
