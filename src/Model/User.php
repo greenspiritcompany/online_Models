@@ -451,7 +451,7 @@ class User implements \JsonSerializable {
   }
 
   /** 
-   * Returns an array of jsonSerialize values safe to display to the public
+   * Returns an array of jsonSerialize values safe to return to the user
    * 
    * @return array
    **/
@@ -461,8 +461,11 @@ class User implements \JsonSerializable {
       'forum_id' => $this->getForumId(),
       'username' => $this->getUsername(),
       'email' => $this->getEmail(),
+      'birthdate' => $this->getBirthdate(),
+      'created_at' => $this->getCreatedAt(),
       'last_login' => $this->getLastLogin(),
-      'verified' => $this->isVerified()
+      'verified' => $this->isVerified(),
+      'legal' => $this->isLegal(),
     ];
   }
 }
