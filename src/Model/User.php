@@ -1,5 +1,5 @@
 <?php
-namespace Telltale\Model;
+namespace Webapi\Model;
 use DateTime;
 use Exception;
 
@@ -167,7 +167,7 @@ class User implements \JsonSerializable {
   // Allow validation to be disabled for legacy records
   public $validate = true;
 
-  public function getId() {
+  public function getId(): int {
     return (int)$this->id;
   }
 
@@ -177,11 +177,11 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getCustomerId() {
+  public function getCustomerId(): int {
     return (int)$this->customer_id;
   }
 
-  public function getForumId() {
+  public function getForumId(): int {
     return (int)$this->forum_id;
   }
 
@@ -192,7 +192,7 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getUsername() {
+  public function getUsername(): string {
     return $this->username;
   }
 
@@ -203,7 +203,7 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getEmail() {
+  public function getEmail(): string {
     return $this->email;
   }
 
@@ -214,7 +214,7 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getPassword() {
+  public function getPassword(): string {
     return $this->password;
   }
 
@@ -233,7 +233,7 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getPasswordSalt() {
+  public function getPasswordSalt(): string {
     return $this->pw_salt;
   }
 
@@ -245,7 +245,7 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getPasswordResetKey() {
+  public function getPasswordResetKey(): string {
     return $this->change_pw;
   }
 
@@ -257,7 +257,7 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getBirthdate() {
+  public function getBirthdate(): string {
     return $this->birthdate;
   }
 
@@ -269,7 +269,7 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getEmailVerificationKey() {
+  public function getEmailVerificationKey(): string {
     return $this->email_salt;
   }
 
@@ -281,7 +281,7 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getEmailVerify() {
+  public function getEmailVerify(): string {
     return $this->email_verify;
   }
 
@@ -293,15 +293,15 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getCreatedAt() {
+  public function getCreatedAt(): string {
     return $this->created_at;
   }
 
-  public function getUpdatedAt() {
+  public function getUpdatedAt(): string {
     return $this->updated_at;
   }
 
-  public function getLastLogin() {
+  public function getLastLogin(): string {
     return $this->last_login_at;
   }
 
@@ -313,7 +313,7 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getDisabled() {
+  public function getDisabled(): bool {
     return (bool)$this->disabled;
   }
 
@@ -433,28 +433,21 @@ class User implements \JsonSerializable {
     return ['keys' => $keys, 'values' => $values];
   }
 
-  /** 
-   * Returns an array of values for the JWT Token
+  /**
+   * User auth token
+   * Used to authenticate a user's request without their email/password
    * 
-   * @return array
+   * Format: userId,time,hash
+   * userId: The user's id for this token
+   * time: When the auth token was initially created. Will allow tokens older than a certain time to be invalidated if needed
+   * 
+   * @return string
    **/
-  public function tokenPayload(): array {
-    $payload = [
-      'uid' => $this->getId(),
-      'fid' => $this->getForumId(),
-      'scopes' => ['user'],
-      'sub' => $this->getEmail(),
-      'iss' => getenv('ROOT_URL'),
-      'iat' => time(), // Issued At Claim
-      'updated_at' => $this->getUpdatedAt(),
-      'exp' => time() + (int)getenv('JWT_TTL'),
-    ];
-
-    if ($this->isVerified()) {
-      $payload['scopes'][] = 'verified';
-    }
-
-    return $payload;
+  public function authToken(string $time = ''): string {
+    $time = $time ?: time();
+    $payload = $this->getId() . ',' . $time;
+    $toHash = $payload . ',' . $this->getPassword();
+    return $payload . ',' . hash_hmac('SHA256', $toHash, getenv('AUTH_TOKEN_KEY'));
   }
 
   /** 
