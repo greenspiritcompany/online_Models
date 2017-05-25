@@ -1,5 +1,5 @@
 <?php
-namespace Webapi\Model;
+namespace Telltale\Model;
 use Exception;
 
 class Association implements \JsonSerializable {

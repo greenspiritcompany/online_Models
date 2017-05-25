@@ -1,5 +1,5 @@
 <?php
-namespace Webapi\DataMapper;
+namespace Telltale\DataMapper;
 
 use PDO;
 use PDOException;
