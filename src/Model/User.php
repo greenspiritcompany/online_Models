@@ -233,7 +233,7 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getPasswordSalt(): string {
+  public function getPasswordSalt() {
     return $this->pw_salt;
   }
 
@@ -245,7 +245,7 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getPasswordResetKey(): string {
+  public function getPasswordResetKey() {
     return $this->change_pw;
   }
 
@@ -257,7 +257,7 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getBirthdate(): string {
+  public function getBirthdate() {
     return $this->birthdate;
   }
 
@@ -281,7 +281,7 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getEmailVerify(): string {
+  public function getEmailVerify() {
     return $this->email_verify;
   }
 
@@ -293,15 +293,15 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getCreatedAt(): string {
+  public function getCreatedAt() {
     return $this->created_at;
   }
 
-  public function getUpdatedAt(): string {
+  public function getUpdatedAt() {
     return $this->updated_at;
   }
 
-  public function getLastLogin(): string {
+  public function getLastLogin() {
     return $this->last_login_at;
   }
 
