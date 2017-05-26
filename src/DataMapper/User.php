@@ -207,30 +207,30 @@ class User {
     * @param string $token
     * @return UserModel
     */
-  public function fromToken(string $token) {
+  public function fromToken(string $token): UserModel {
     // $time: When the token was issued
     // $hash: Used to sign the token
     list($userId, $time, $hash) = explode(',', $token);
 
     if (!((int)$userId > 0 && $time && $hash)) {
-      throw new \Exception('Invalid User Token');
+      throw new \Exception('Invalid User Token', 400);
     }
 
     $user = $this->get($userId);
 
     if (!$user) {
-      throw new \Exception('User Not Found');
+      throw new \Exception('User Not Found', 404);
     }
 
     // User must be enabled
     if ($user->getDisabled()) {
-      throw new \Exception('Account Disabled');
+      throw new \Exception('Account Disabled', 403);
     }
 
     // Token must still match the user's
     $expectedToken = $user->authToken($time);
     if (!hash_equals($token,$expectedToken)) {
-      throw new \Exception('Token Validation Failed');
+      throw new \Exception('Token Validation Failed', 401);
     }
     
     return $user;
