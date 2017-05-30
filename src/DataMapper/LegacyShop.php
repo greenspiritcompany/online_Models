@@ -43,8 +43,7 @@ class LegacyShop {
       LEFT JOIN ttgshop_products as product on product.id = op.product_fk
       WHERE order.customer_fk=:customerId AND order.legacy_id IS NULL
       GROUP BY order.id
-      ORDER BY order.id desc
-      LIMIT 1000
+      ORDER BY order.id DESC
       '
     );
 
