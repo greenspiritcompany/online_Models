@@ -88,9 +88,9 @@ class LegacyShopOrder implements \JsonSerializable {
    *
    * Found as status_authorization in the table
    * 
-   * @var string status
+   * @var string gatewayStatus
    **/
-  private $status;
+  private $gatewayStatus;
 
   /**
    * Array of the product names contained in the order
@@ -124,7 +124,7 @@ class LegacyShopOrder implements \JsonSerializable {
         'total' => $this->total,
         'type' => strtolower($this->gateway) == 'cybersource' ? 'Credit Card' : $this->gateway
       ],
-      'status' => strtolower($this->status) == 'captured' ? 'Completed' : $this->status,
+      'status' => strtolower($this->gatewayStatus) == 'captured' ? 'Completed' : $this->gatewayStatus,
       'products' => $this->products,
     ];
   }

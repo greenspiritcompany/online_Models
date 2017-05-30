@@ -27,28 +27,29 @@ class LegacyShop {
 
     $statement = $this->pdo->prepare(
       'SELECT
-        order.id
-        order.total AS total,
-        order.created_at AS createdAt,
-        order.updated_at AS updatedAt,
-        order.transaction_type AS gateway,
-        order.merchant_refid AS gatewayReferenceId,
-        order.gateway_refid AS gatewayRequestId,
-        order.transaction_id AS gatewayTransactionId
-        order.gateway_reqtoken AS gatewayToken,
-        order.status_authorization AS status,
-        GROUP_CONCAT(product.name SEPARATOR "||") as products
-      FROM ttgshop_orders AS order
-      LEFT JOIN ttgshop_orders_products as op on op_order_fk = order.id
-      LEFT JOIN ttgshop_products as product on product.id = op.product_fk
-      WHERE order.customer_fk=:customerId AND order.legacy_id IS NULL
-      GROUP BY order.id
-      ORDER BY order.id DESC
-      '
-    );
+        o.id,
+        o.total AS total,
+        o.created_at AS createdAt,
+        o.updated_at AS updatedAt,
+        o.transaction_type AS gateway,
+        o.merchant_refid AS gatewayReferenceId,
+        o.gateway_reqid AS gatewayRequestId,
+        o.transaction_id AS gatewayTransactionId,
+        o.gateway_reqtoken AS gatewayToken,
+        o.status_authorization AS gatewayStatus,
+        GROUP_CONCAT(p.name SEPARATOR "||") as products
+      FROM ttgshop_orders AS o
+      LEFT JOIN ttgshop_orders_products AS op ON op.order_fk = o.id
+      LEFT JOIN ttgshop_products AS p ON p.id = op.product_fk
+      WHERE o.customer_fk=:customerId AND o.legacy_id IS NULL
+      GROUP BY o.id
+      ORDER BY o.id DESC;
+    ');
 
     $statement->setFetchMode(PDO::FETCH_CLASS, LegacyShopOrderModel::class);
-    $statement->execute();
+    $statement->execute([
+      'customerId' => $customerId
+    ]);
     $orders = $statement->fetchAll();
 
     // Set cache length
