@@ -57,7 +57,8 @@ class LegacyShop {
     $cacheItem->expiresAfter($exp);
 
     // Cache the result
-    $this->cacheUser($orders);
+    $cacheItem->set($orders);
+    $this->cache->save($cacheItem);
 
     return $orders;
   }
