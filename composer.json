@@ -1,6 +1,6 @@
 {
     "name": "telltale/models",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "description": "Models that match our data structure",
     "type": "package",
     "license": "proprietary",
