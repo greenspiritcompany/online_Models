@@ -138,6 +138,16 @@ class VanillaUser implements \JsonSerializable {
   }
 
   /** 
+   * Has this record mutated?
+   * Useful to see if and update should be sent to the user DataMapper
+   * 
+   * @return bool
+   **/
+  public function hasUpdates(): bool {
+    return !empty($this->updatedFields);
+  }
+
+  /** 
    * Returns an array of all fields that have been set along with their values
    * 
    * @return array
