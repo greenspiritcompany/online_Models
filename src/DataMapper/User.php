@@ -208,9 +208,10 @@ class User {
     * @return UserModel
     */
   public function fromToken(string $token): UserModel {
+    // $userId: TTG user id from the auth/users table
     // $time: When the token was issued
     // $hash: Used to sign the token
-    list($userId, $time, $hash) = explode(',', $token);
+    list($userId, $time, $hash) = array_pad(explode(',', $token), 3, 0);
 
     if (!((int)$userId > 0 && $time && $hash)) {
       throw new \Exception('Invalid User Token', 400);
