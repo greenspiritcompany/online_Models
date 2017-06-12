@@ -11,6 +11,7 @@ class User implements \JsonSerializable {
   ];
   const PASSWORD_MIN = 6;
   const LEGAL_AGE = 18;
+  const UNDER_AGE = 12;
   const USERNAME_REGEX = '/^[\w\-]{5,24}$/';
 
   /** 
@@ -358,6 +359,21 @@ class User implements \JsonSerializable {
     $birthdate = new DateTime($this->birthdate);
     $diff = $birthdate->diff(new DateTime('now'));
     return $diff->y >= self::LEGAL_AGE;
+  }
+
+  /**
+   * Is the user under age and invalid?
+   *
+   * @return bool
+   */
+  public function isUnderage(): bool {
+    if (!$this->birthdate) {
+      return false;
+    }
+
+    $birthdate = new DateTime($this->birthdate);
+    $diff = $birthdate->diff(new DateTime('now'));
+    return $diff->y >= self::UNDER_AGE;
   }
 
    /** 
