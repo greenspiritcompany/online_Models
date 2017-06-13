@@ -373,7 +373,7 @@ class User implements \JsonSerializable {
 
     $birthdate = new DateTime($this->birthdate);
     $diff = $birthdate->diff(new DateTime('now'));
-    return $diff->y >= self::UNDER_AGE;
+    return $diff->y <= self::UNDER_AGE;
   }
 
    /** 
