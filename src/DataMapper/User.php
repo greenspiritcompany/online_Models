@@ -133,23 +133,23 @@ class User {
   public function add(UserModel $user) {
 
     $statement =  $this->pdo->prepare(
-      'INSERT INTO users (email, email_salt, password, created_at, updated_at, last_login_at)
-      VALUES (:email, :email_salt, :password, NOW(), NOW(), NOW())'
+      'INSERT INTO users (email, email_salt, password, birthdate, created_at, updated_at, last_login_at)
+      VALUES (:email, :email_salt, :password, :birthdate, NOW(), NOW(), NOW())'
     );
 
+    // Email & Password can be null in the auth users table so we must check here
+    // @TODO: Update users schema so these fields cannot be null 
     $email = $user->getEmail();
     $password = $user->getPassword();
-    $emailKey = $user->getEmailVerificationKey();
-
-    // @TODO: These fields should be required in the users table!
-    if (!($email && $password && $emailKey)) {
+    if (!($email && $password)) {
       throw new PDOException('Missing required user fields');
     }
 
     $statement->execute([
       'email' => $email,
       'password' => $password,
-      'email_salt' => $emailKey,
+      'email_salt' => $user->getEmailVerificationKey(),
+      'birthdate' => $user->getBirthdate(),
     ]);
 
     if ($statement->rowCount() !== 1) {
