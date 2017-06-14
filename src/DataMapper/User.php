@@ -156,9 +156,10 @@ class User {
       throw new PDOException('User could not be created');
     }
 
-    // Update user model with new user ID
+    // Update user model with values that are set by DB insert.
     $user->setId($this->pdo->lastInsertId());
     $user->setLastLogin('now');
+    $user->setCreatedAt('now');
 
     // Cache the user
     $this->cacheUser($user);

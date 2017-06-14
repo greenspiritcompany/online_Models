@@ -298,6 +298,14 @@ class User implements \JsonSerializable {
     return $this->created_at;
   }
 
+  public function setCreatedAt(string $date): self {
+    if ($this->created_at) throw new Exception('CreatedAt time should not be changed', 409);
+    $date = new DateTime($date);
+    $date = $date->format('Y-m-d H:i:s');
+    $this->created_at = $date;
+    return $this;
+  }
+
   public function getUpdatedAt() {
     return $this->updated_at;
   }
