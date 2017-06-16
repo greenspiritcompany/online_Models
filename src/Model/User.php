@@ -287,8 +287,11 @@ class User implements \JsonSerializable {
   }
 
   public function setEmailVerify(string $date): self {
-    $date = new DateTime($date);
-    $date = $date->format('Y-m-d H:i:s');
+    // One of the few cases where the value can be set back to null
+    if (!empty($date)) {
+      $date = new DateTime($date);
+      $date = $date->format('Y-m-d H:i:s');
+    }
     if ($this->email_verify !== $date) $this->updatedFields[] = 'email_verify';
     $this->email_verify = $date;
     return $this;
@@ -345,12 +348,12 @@ class User implements \JsonSerializable {
   }
 
   /** 
-   * Does this user record have the required fields to be considered 'verified'?
+   * Is the user's email verified?
    * 
    * @return bool
    **/
   public function isVerified(): bool {
-    return $this->email_verify && $this->birthdate && $this->username && $this->forum_id;
+    return !empty($this->email_verify);
   }
 
   /** 
