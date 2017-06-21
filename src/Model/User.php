@@ -193,8 +193,8 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getUsername() {
-    return $this->username;
+  public function getUsername(): string {
+    return $this->username ?? '';
   }
 
   public function setUsername(string $username): self {
@@ -205,7 +205,7 @@ class User implements \JsonSerializable {
   }
 
   public function getEmail(): string {
-    return $this->email;
+    return $this->email ?? '';
   }
 
   public function setEmail(string $email): self {
@@ -216,7 +216,7 @@ class User implements \JsonSerializable {
   }
 
   public function getPassword(): string {
-    return $this->password;
+    return $this->password ?? '';
   }
 
   public function setPassword(string $password): self {
@@ -234,8 +234,8 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getPasswordSalt() {
-    return $this->pw_salt;
+  public function getPasswordSalt(): string {
+    return $this->pw_salt ?? '';
   }
 
   public function setPasswordSalt(string $salt): self {
@@ -246,8 +246,8 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getPasswordResetKey() {
-    return $this->change_pw;
+  public function getPasswordResetKey(): string {
+    return $this->change_pw ?? '';
   }
 
   public function setPasswordResetKey(string $key): self {
@@ -258,8 +258,8 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getBirthdate() {
-    return $this->birthdate;
+  public function getBirthdate(): string {
+    return $this->birthdate ?? '';
   }
 
   public function setBirthdate(string $date): self {
@@ -271,7 +271,7 @@ class User implements \JsonSerializable {
   }
 
   public function getEmailVerificationKey(): string {
-    return $this->email_salt;
+    return $this->email_salt ?? '';
   }
 
   public function setEmailVerificationKey(string $key): self {
@@ -282,8 +282,8 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getEmailVerify() {
-    return $this->email_verify;
+  public function getEmailVerify(): string {
+    return $this->email_verify ?? '';
   }
 
   public function setEmailVerify(string $date): self {
@@ -297,8 +297,8 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getCreatedAt() {
-    return $this->created_at;
+  public function getCreatedAt(): string {
+    return $this->created_at ?? '';
   }
 
   public function setCreatedAt(string $date): self {
@@ -309,12 +309,12 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  public function getUpdatedAt() {
-    return $this->updated_at;
+  public function getUpdatedAt(): string {
+    return $this->updated_at ?? '';
   }
 
-  public function getLastLogin() {
-    return $this->last_login_at;
+  public function getLastLogin(): string {
+    return $this->last_login_at ?? '';
   }
 
   public function setLastLogin(string $date): self {
@@ -348,7 +348,7 @@ class User implements \JsonSerializable {
   }
 
   /** 
-   * Is the user's email verified?
+   * Does this user record have the required fields to be considered 'verified'?
    * 
    * @return bool
    **/
