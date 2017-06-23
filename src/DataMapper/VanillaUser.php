@@ -100,13 +100,13 @@ class VanillaUser {
   public function add(VanillaUserModel $user) {
 
     $statement = $this->pdo->prepare(
-    'INSERT INTO GDN_User (Name, HashMethod, Email, DateOfBirth, AuthID, InsertIPAddress, DateFirstVisit, DateInserted)
-      VALUES (:Name, :HashMethod, :Email, :DateOfBirth, :AuthID, :InsertIPAddress, NOW(), NOW())
+    'INSERT INTO GDN_User (Name, Password, Email, DateOfBirth, AuthID, InsertIPAddress, DateFirstVisit, DateInserted)
+      VALUES (:Name, :Password, :HashMethod, :Email, :DateOfBirth, :AuthID, :InsertIPAddress, NOW(), NOW())
     ');
 
     $statement->execute([
       'Name' => $user->getName(),
-      'HashMethod' => 'PrimeAuth',
+      'Password' => '',
       'Email' => $user->getEmail(),
       'DateOfBirth' => $user->getDateOfBirth(),
       'AuthID' => $user->getAuthId(),
