@@ -30,16 +30,16 @@ class AdminUser {
 
     // User in cache?
     $user = $cacheItem->get();
-    $cacheHit = $cacheItem->hasItem();
+    $cacheHit = $cacheItem->isHit();
     
     // Try the database
     if (!$cacheHit) {
       $statement = $this->pdo->prepare(
-        'SELECT username, name, jira_session as jiraSession
+        'SELECT username, fullname as name, jira_session as jiraSession
         FROM admin_user WHERE username = :username'
       );
 
-      $statement->setFetchMode(PDO::FETCH_CLASS, UserModel::class);
+      $statement->setFetchMode(PDO::FETCH_CLASS, AdminUserModel::class);
       $statement->execute(['username' => $username]);
       $user = $statement->fetch();
     }
@@ -76,15 +76,18 @@ class AdminUser {
 
     // Store in DB
     $statement = $this->pdo->prepare(
-      'INSERT INTO admin_user (username, name, jira_session
-      VALUES (:username, :name: :jira_session)
-      ON DUPLICATE_KEY UPDATE updated_at = NOW(), jira_session = :jira_session'
+      'INSERT INTO admin_user (username, fullname, jira_session)
+      VALUES (:username, :name, :jira_session)
+      ON DUPLICATE KEY UPDATE updated_at = NOW(), jira_session = :jira_session_update'
     );
     
+    $jiraSession = $user->getJiraSession();
+
     $statement->execute([
       'username' => $username,
       'name' => $user->getName(),
-      'jira_session' => $user->getJiraSession()
+      'jira_session' => $jiraSession,
+      'jira_session_update' => $jiraSession,
     ]);
 
     // Set user cache length
