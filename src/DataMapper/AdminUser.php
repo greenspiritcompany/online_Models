@@ -26,13 +26,39 @@ class AdminUser {
     * @return AdminUserModel|bool
     */
   public function get(string $username) {
-    $user = $this->cache->getItem(self::CACHE_NAMESPACE . $username)->get();
+    $cacheItem = $this->cache->getItem(self::CACHE_NAMESPACE . $username);
+
+    // User in cache?
+    $user = $cacheItem->get();
+    $cacheHit = $cacheItem->hasItem();
+    
+    // Try the database
+    if (!$cacheHit) {
+      $statement = $this->pdo->prepare(
+        'SELECT username, name, jira_session as jiraSession
+        FROM admin_user WHERE username = :username'
+      );
+
+      $statement->setFetchMode(PDO::FETCH_CLASS, UserModel::class);
+      $statement->execute(['username' => $username]);
+      $user = $statement->fetch();
+    }
 
     // If user has no permissions always check if some were added
     if ($user instanceof AdminUserModel && !$user->getPermissions()) {
-      return $this->getPermissions($user);
+      $user = $this->getPermissions($user);
     }
 
+    if (!$cacheHit) {
+      // Set user cache length
+      $exp = new \DateInterval('P1D');
+      $cacheItem->expiresAfter($exp);
+     
+      // Save user into cache
+      $cacheItem->set($user);
+      $this->cache->save($cacheItem);
+    }
+    
     return $user;
   }
 
@@ -45,7 +71,21 @@ class AdminUser {
     * @return UserModel
     */
   public function store(AdminUserModel $user) {
-    $cacheItem = $this->cache->getItem(self::CACHE_NAMESPACE . $user->getUsername());
+    $username = $user->getUsername();
+    $cacheItem = $this->cache->getItem(self::CACHE_NAMESPACE . $username);
+
+    // Store in DB
+    $statement = $this->pdo->prepare(
+      'INSERT INTO admin_user (username, name, jira_session
+      VALUES (:username, :name: :jira_session)
+      ON DUPLICATE_KEY UPDATE updated_at = NOW(), jira_session = :jira_session'
+    );
+    
+    $statement->execute([
+      'username' => $username,
+      'name' => $user->getName(),
+      'jira_session' => $user->getJiraSession()
+    ]);
 
     // Set user cache length
     $exp = new \DateInterval('P1D');
