@@ -101,7 +101,7 @@ class VanillaUser {
 
     $statement = $this->pdo->prepare(
     'INSERT INTO GDN_User (Name, Password, Email, DateOfBirth, AuthID, InsertIPAddress, DateFirstVisit, DateInserted)
-      VALUES (:Name, :Password, :HashMethod, :Email, :DateOfBirth, :AuthID, :InsertIPAddress, NOW(), NOW())
+      VALUES (:Name, :Password, :Email, :DateOfBirth, :AuthID, :InsertIPAddress, NOW(), NOW())
     ');
 
     $statement->execute([
