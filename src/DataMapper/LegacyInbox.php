@@ -26,13 +26,13 @@ class LegacyInbox {
    */
   public function getMessages(int $userId, string $since = 'now'): array {
 
-    $cacheItem = $this->cache->getItem('inboxMessages|' . $userId . '|since|' . sha1($since));
+    // $cacheItem = $this->cache->getItem('inboxMessages|' . $userId . '|since|' . sha1($since));
 
-    // Return from cache if found
-    $messages = $cacheItem->get();
-    if ($messages) {
-      return $messages;
-    }
+    // // Return from cache if found
+    // $messages = $cacheItem->get();
+    // if ($messages) {
+    //   return $messages;
+    // }
 
     $dateTime = new DateTime($since);
     $activityDate = $dateTime->format('Y-m-d H:i:s');
@@ -63,13 +63,13 @@ class LegacyInbox {
     ]);
     $messages = $statement->fetchAll();
 
-    // Set cache length
-    $exp = new DateInterval(self::CACHE_LENGTH);
-    $cacheItem->expiresAfter($exp);
+    // // Set cache length
+    // $exp = new DateInterval(self::CACHE_LENGTH);
+    // $cacheItem->expiresAfter($exp);
 
-    // Cache the result
-    $cacheItem->set($messages);
-    $this->cache->save($cacheItem);
+    // // Cache the result
+    // $cacheItem->set($messages);
+    // $this->cache->save($cacheItem);
 
     return $messages;
   }
@@ -79,7 +79,7 @@ class LegacyInbox {
    *
    */
   public function getUnreadCount(int $userId): int {
-    $cacheItem = $this->cache->getItem('inboxMessages|' . $userId . '|count');
+    //$cacheItem = $this->cache->getItem('inboxMessages|' . $userId . '|count');
 
     $statement = $this->pdo->prepare('SELECT count(*) FROM inbox WHERE user_fk = :userId AND status = "new"');
 
@@ -90,12 +90,12 @@ class LegacyInbox {
     $count = $statement->fetchColumn();
 
     // Set cache length
-    $exp = new DateInterval(self::CACHE_LENGTH);
-    $cacheItem->expiresAfter($exp);
+    // $exp = new DateInterval(self::CACHE_LENGTH);
+    // $cacheItem->expiresAfter($exp);
 
     // Cache the result
-    $cacheItem->set($count);
-    $this->cache->save($cacheItem);
+    // $cacheItem->set($count);
+    // $this->cache->save($cacheItem);
 
     return $count;
   }
@@ -141,7 +141,7 @@ class LegacyInbox {
     $statement->execute($statementParams);
 
     // Clear inbox cache for user
-    $cacheItem = $this->cache->deleteItem('inboxMessages|' . $userId);
+    //$cacheItem = $this->cache->deleteItem('inboxMessages|' . $userId);
 
     return $statement->rowCount() > 0;
   }
