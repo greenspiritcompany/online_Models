@@ -91,6 +91,9 @@ class GlobalDB {
     'guardians' => [
       'name' => 'Marvel’s Guardians of the Galaxy: The Telltale Series',
     ],
+    'minecraft2' => [
+      'name' => 'Minecraft: Story Mode - Season Two',
+    ],
   ];
 
   public function __construct(PDO $pdo) {
