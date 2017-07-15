@@ -1,10 +1,12 @@
 <?php
 namespace Telltale\Model;
 use Exception;
+use League\OAuth2\Client\Token\AccessToken;
 
 class Association implements \JsonSerializable {
 
-  /** 
+  /**
+   * The user id assigned to this account association 
    * The primary key attribute of the auth.users table `id`
    *
    * @var int User ID (id PK) from the auth.users table
@@ -12,16 +14,17 @@ class Association implements \JsonSerializable {
   private $user_id;
 
   /**
-   *
-   * NOTE this is nullable here but the database requires it. The data must be all lowercase.
+   * Association slug/key 
+   * 
+   * NOTE this is nullable here but the database requires it. Must be lowercase.
    *
    * @var string|null A descriptive key for the service this association is for. 
   **/
   private $provider;
 
   /**
-   *
    * The User identifier for the association. 
+   * 
    * Typically this is the account uid or username.
    * For example: For Xbox provider it will be the XUID, PSN it will be PsnId
    *
@@ -30,25 +33,34 @@ class Association implements \JsonSerializable {
   private $identifier;
 
   /**
+   * Represents an Access Token.
+   * @link http://tools.ietf.org/html/rfc6749#section-1.4 Access Token (RFC 6749, §1.4)
    *
-   *
-   * @var string|null 
+   * @var AccessToken access_token attributes
   **/
   private $access_token;
 
   /**
-   *
+   * When the association was created
    *
    * @var datetime|null 
   **/
   private $created_at;
 
   /**
-   *
+   * When the association was updated
    *
    * @var datetime|null 
   **/
   private $updated_at;
+
+
+  public function __construct() {
+    // Decode access_token when set by PDO
+    if ($this->access_token && '{' == $this->access_token[0]) {
+      $this->access_token = new AccessToken(json_decode($this->access_token, true));
+    }
+  }
 
   public function getUserId() {
     return (int)$this->user_id;
@@ -83,7 +95,7 @@ class Association implements \JsonSerializable {
     return $this->access_token;
   }
 
-  public function setAccessToken(string $accessToken): self {
+  public function setAccessToken(AccessToken $accessToken): self {
     $this->access_token = $accessToken;
     return $this;
   }
@@ -128,7 +140,7 @@ class Association implements \JsonSerializable {
     return [
       'provider' => $this->getProvider(),
       'associated' => true,
-      'access_token' => $this->getAccessToken(),
+      'accessToken' => $this->getAccessToken(),
     ];
   }
 
