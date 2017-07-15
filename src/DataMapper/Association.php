@@ -2,6 +2,7 @@
 namespace Telltale\DataMapper;
 
 use Telltale\Model\Association as AssociationModel;
+use League\OAuth2\Client\Token\AccessToken;
 use PDO;
 use PDOException;
 
@@ -41,6 +42,10 @@ class Association {
 
     $identifier = $association->getIdentifier();
     $accessToken = $association->getAccessToken();
+
+    if ($accessToken instanceof AccessToken) {
+      $accessToken = json_encode($accessToken);
+    }
 
     $statement->execute([
       'user_id' => $association->getUserId(),
