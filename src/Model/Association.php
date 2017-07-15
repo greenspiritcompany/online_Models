@@ -57,7 +57,7 @@ class Association implements \JsonSerializable {
 
   public function __construct() {
     // Decode access_token when set by PDO
-    if ($this->access_token) {
+    if ($this->access_token && '{' == $this->access_token[0]) {
       $this->access_token = new AccessToken(json_decode($this->access_token, true));
     }
   }
