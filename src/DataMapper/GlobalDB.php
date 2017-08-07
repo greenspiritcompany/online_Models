@@ -94,6 +94,9 @@ class GlobalDB {
     'minecraft2' => [
       'name' => 'Minecraft: Story Mode - Season Two',
     ],
+    'batman2' => [
+      'name' => 'Batman: The Enemy Within',
+    ],
   ];
 
   public function __construct(PDO $pdo) {
