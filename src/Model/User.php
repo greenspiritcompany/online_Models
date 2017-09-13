@@ -259,7 +259,7 @@ class User implements \JsonSerializable {
   }
 
   public function getBirthdate(): string {
-    return $this->birthdate ?? '';
+    return isset($this->birthdate) && $this->birthdate !== '0000-00-00 00:00:00' ? $this->birthdate : '';
   }
 
   public function setBirthdate(string $date): self {
