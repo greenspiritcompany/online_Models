@@ -31,7 +31,7 @@ class AdminUser {
     // User in cache?
     $user = $cacheItem->get();
     $cacheHit = $cacheItem->isHit();
-    
+
     // Try the database
     if (!$cacheHit) {
       $statement = $this->pdo->prepare(
@@ -53,12 +53,12 @@ class AdminUser {
       // Set user cache length
       $exp = new \DateInterval('P1D');
       $cacheItem->expiresAfter($exp);
-     
+
       // Save user into cache
       $cacheItem->set($user);
       $this->cache->save($cacheItem);
     }
-    
+
     return $user;
   }
 
@@ -80,7 +80,7 @@ class AdminUser {
       VALUES (:username, :name, :jira_session)
       ON DUPLICATE KEY UPDATE updated_at = NOW(), jira_session = :jira_session_update'
     );
-    
+
     $jiraSession = $user->getJiraSession();
 
     $statement->execute([
@@ -124,7 +124,7 @@ class AdminUser {
     // Token must still match the user's
     $expectedToken = $user->authToken($time);
     if (!hash_equals($token, $expectedToken)) {
-      throw new \Exception('Token Validation Failed');
+      throw new \Exception('Token Validation Failed', 401);
     }
 
     return $user;
