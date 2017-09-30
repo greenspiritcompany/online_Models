@@ -57,8 +57,8 @@ class Game {
    * @param GameModel $game
    * @return array
    */
-  public function fetchValidGameList(GameModel $gameQuery): array {
-    $games = $this->fetchAll($gameQuery);
+  public function fetchValidGameList(GameModel $gameQuery = null): array {
+    $games = $gameQuery ? $this->fetchAll($gameQuery) : $this->getAllActive();
 
     if (!$games) {
       return [];
