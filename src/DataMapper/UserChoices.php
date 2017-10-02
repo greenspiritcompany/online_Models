@@ -46,7 +46,7 @@ class UserChoices {
       $playerResults = $cacheItem->get();
 
       if ($cacheItem->isHit()) {
-        return $player_results;
+        return $playerResults;
       }
     }
 
@@ -54,7 +54,7 @@ class UserChoices {
     $servicesAccountId = $this->servicesAccount->getIdFromAuthId($userID);
 
     if (!$servicesAccountId) {
-      return false;
+      return $this->statusFailResponse();
     }
 
     // Check if the important events have been placed in cache by Kinesis
@@ -80,8 +80,10 @@ class UserChoices {
       return $this->statusResponse("pending", "Searching for player data.");
     }
 
+    // Get user choice data from cache
     $userChoiceData = json_decode($servicesCacheItem->get(), true);
 
+    // Cached choice data is still in pending state
     if (array_key_exists('status', $userChoiceData) && 'pending' == $userChoiceData['status']) {
       return $this->statusResponse("pending", "Searching for player data.");
     }
@@ -291,7 +293,7 @@ class UserChoices {
   private function statusResponse(string $status, string $message) {
     return [
       'meta' => [
-        'status' => $stats,
+        'status' => $status,
         'message' => $message,
       ]
     ];
