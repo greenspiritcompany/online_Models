@@ -1,6 +1,8 @@
 <?php
 namespace Telltale\DataMapper;
 
+use Psr\Log\NullLogger;
+
 use Telltale\DataMapper\ImportantEvents;
 use Telltale\DataMapper\Game;
 use Telltale\DataMapper\ServicesAccount;
@@ -19,10 +21,18 @@ class UserChoices {
   const CACHE_NAMESPACE_FETCH_CHOICES = 'CloudSaveFetchChoices|';
   const CACHE_NAMESPACE_CHOICE_DATA = 'CloudSaveChoiceData|';
 
-  private $globalDB;
-  private $servicesDB;
+  private $importantEvents;
+  private $gameData;
+  private $servicesAccount;
+  private $cache;
+  private $servicesCache;
+  private $choiceDocument;
+  private $kinesis;
+  private $log;
 
   public function __construct(PDO $globalPDO, PDO $servicesPDO, CacheItemPoolInterface $cache = null, CacheItemPoolInterface $servicesCache, $logger = null) {
+
+    $this->log = $logger ?? new NullLogger();
 
     $this->importantEvents = new ImportantEvents($globalPDO, $cache);
     $this->gameData = new Game($globalPDO, $cache);
@@ -33,16 +43,26 @@ class UserChoices {
 
     $this->choiceDocument = new ChoiceDocument($servicesPDO, $cache);
 
-    $this->kinesis = new AWSKinesis($logger);
-
-    $this->environment = getenv('ENV');
+    $this->kinesis = new AWSKinesis($this->log);
   }
 
-  public function fetch(int $userID, string $game) {
+  /**
+   * Undocumented function
+   *
+   * @param int $userID
+   * @param string $game
+   * @param string $docType
+   * @return void
+   */
+  public function fetch(int $userID, string $game, string $docType = 'stats_extended', string $namespace = null) {
+
+    if (!$namespace) {
+      $namespace = getenv('ENV');
+    }
 
     // Has the whole user choice doc been cached?
     if ($this->cache) {
-      $cacheItem = $this->cache->getItem(self::CACHE_NAMESPACE_FETCH_CHOICES . $userID . '|' . $game);
+      $cacheItem = $this->cache->getItem($namespace . '|' . self::CACHE_NAMESPACE_FETCH_CHOICES . $userID . '|' . $game . '|' . $docType);
       $playerResults = $cacheItem->get();
 
       if ($cacheItem->isHit()) {
@@ -54,16 +74,18 @@ class UserChoices {
     $servicesAccountId = $this->servicesAccount->getIdFromAuthId($userID);
 
     if (!$servicesAccountId) {
-      return $this->statusFailResponse();
+      $this->log->warning('User has no services account.', ['userID' => $userID, 'game' => $game]);
+      return $this->statusFailResponse($docType);
     }
 
     // Check if the important events have been placed in cache by Kinesis
-    $servicesCacheKey = '|' . $this->environment . '|' . self::CACHE_NAMESPACE_CHOICE_DATA . $servicesAccountId . '|' . $game;
+    $servicesCacheKey = '|' . $namespace . '|' . self::CACHE_NAMESPACE_CHOICE_DATA . $servicesAccountId . '|' . $game;
     $servicesCacheItem = $this->servicesCache->getItem($servicesCacheKey);
 
+    // If there is no cache hit make the Kinesis request
     if (!$servicesCacheItem->isHit()) {
 
-      // Writing a pending message into memcache so we can wait for the kinesis process to return data
+      // Write a pending message into memcache so we can wait for the kinesis process to return data
       $pendingCacheMessage = json_encode([
         'status' => 'pending',
         'datetime' => date('Y-m-d H:i:s')
@@ -74,23 +96,18 @@ class UserChoices {
       $this->servicesCache->save($servicesCacheItem);
 
       // Trigger the kinesis process
-      $this->kinesis->sendCloudSaveProcessRequest($servicesAccountId, $game, $this->environment);
+      $this->kinesis->sendCloudSaveProcessRequest($servicesAccountId, $game, $namespace);
 
-      // Return a pending message so that the frontend knows to keep calling back for results
-      return $this->statusResponse("pending", "Searching for player data.");
+      // Choices are not ready yet. Try again soon.
+      return $this->statusResponse("pending", "Searching for player data.", $docType);
     }
 
     // Get user choice data from cache
     $userChoiceData = json_decode($servicesCacheItem->get(), true);
 
-    // Cached choice data is still in pending state
-    if (array_key_exists('status', $userChoiceData) && 'pending' == $userChoiceData['status']) {
-      return $this->statusResponse("pending", "Searching for player data.");
-    }
-
-    // Check if this user's data is empty (they have no save data)
-    if (empty($userChoiceData['matches'])) {
-      return $this->statusFailResponse();
+    // If we don't have any matches yet, return a pending message
+    if (!array_key_exists('matches', $userChoiceData)) {
+      return $this->statusResponse($userChoiceData['status'] ?: "pending", "Waiting for player data.", $docType);
     }
 
     // Extract the base64 event values that we will use to determine the players choices
@@ -99,12 +116,13 @@ class UserChoices {
     }, $userChoiceData['matches']);
 
     $choiceDocQuery = new ChoiceDocumentModel();
-    $choiceDocQuery->setChoiceDocType('stats_extended');
+    $choiceDocQuery->setChoiceDocType($docType);
     $choiceDocQuery->setGameName($game);
     $choiceDocs = $this->choiceDocument->find($choiceDocQuery);
 
     if (!$choiceDocs) {
-      throw new \Exception('No choices are available yet for this game.', 404);
+      $this->log->error('No Choice Documents were found.', ['game' => $game, 'type' => $docType]);
+      return $this->statusFailResponse($docType);
     }
 
     // Determine what the current live episode is for this game
@@ -113,7 +131,8 @@ class UserChoices {
     $importantEventsSymbolDictionary = $this->importantEvents->fetchSymbolDictionary($game);
 
     if (empty($importantEventsSymbolDictionary)) {
-      return $this->statusFailResponse();
+      $this->log->error('No important events were found.', ['game' => $game]);
+      return $this->statusFailResponse($docType);
     }
 
     $playerChoiceDocument = $this->createPlayerChoiceDocument($choiceDocs, $playerEventList, $currentLiveEpisodeId, $importantEventsSymbolDictionary);
@@ -138,11 +157,21 @@ class UserChoices {
    * @param array $importantEventsSymbolDictionary
    * @return array
    */
-  public function createPlayerChoiceDocument(ChoiceDocumentModel $choiceDocument, array $playerEventList, int $currentLiveEpisodeId, array $importantEventsSymbolDictionary): array {
+  private function createPlayerChoiceDocument(ChoiceDocumentModel $choiceDocument, array $playerEventList, int $currentLiveEpisodeId, array $importantEventsSymbolDictionary): array {
+
+    if (empty($playerEventList)) {
+      return [
+        'meta' => [
+          'status' => 'fail',
+          'message' => 'No events for this user.',
+          'type' => $choiceDocument->getChoiceDocType(),
+        ]
+      ];
+    }
+
     $masterChoiceDoc = $choiceDocument->getData();
 
     $playerChoiceDoc = [];
-
     foreach($masterChoiceDoc['choices'] as $choice) {
       foreach ($choice['options'] as $option) {
         $expr = $option['expression'];
@@ -165,7 +194,8 @@ class UserChoices {
     return [
       'meta' => [
         'status' => 'success',
-        'message' => 'Data found for this user.'
+        'message' => 'Events found for this user.',
+        'type' => $choiceDocument->getChoiceDocType(),
       ],
       'choice_document' => $playerChoiceDoc
     ];
@@ -279,8 +309,8 @@ class UserChoices {
    *
    * @return array
    */
-  private function statusFailResponse() {
-    return $this->statusResponse("failed", "No save data for this player.");
+  private function statusFailResponse(string $type) {
+    return $this->statusResponse('failed', 'No save data for this player.', $type);
   }
 
   /**
@@ -290,11 +320,12 @@ class UserChoices {
    * @param string $message
    * @return array
    */
-  private function statusResponse(string $status, string $message) {
+  private function statusResponse(string $status, string $message, string $type) {
     return [
       'meta' => [
         'status' => $status,
         'message' => $message,
+        'type' => $type,
       ]
     ];
   }
