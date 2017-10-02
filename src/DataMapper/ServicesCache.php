@@ -2,6 +2,7 @@
 namespace Telltale\DataMapper;
 
 use Psr\Cache\CacheItemPoolInterface;
+use Psr\Cache\CacheItemInterface as CacheItem;
 use Telltale\Model\ServicesCache as ServicesCacheItem;
 
 class ServicesCache implements CacheItemPoolInterface {
@@ -60,21 +61,18 @@ class ServicesCache implements CacheItemPoolInterface {
     return true;
   }
 
-  public function save(ServicesCacheItem $item) {
+  public function save(CacheItem $item) {
 
-    $expiresAt = $item->getExpiresAt();
-    $expiresAt = $expiresAt ? $expiresAt->getTimeStamp() : 0;
-
-    $this->client->set(
+    $this->cache->set(
       $item->getKey(),
       $item->get(),
-      $$expiresAt
+      $item->getExpiresAt()
     );
 
     return true;
   }
 
-  public function saveDeferred(ServicesCacheItem $item) {
+  public function saveDeferred(CacheItem $item) {
     $this->deferred[$item->getKey()] = $item;
     return true;
   }
