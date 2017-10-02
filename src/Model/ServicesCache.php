@@ -31,10 +31,20 @@ class ServicesCache implements CacheItemInterface {
 
   public function set($value) {
     $this->value = $value;
+    return $this;
   }
 
   public function expiresAt($expiresAt) {
-    $this->expiresAt = $expiresAt;
+
+    if ($expiresAt instanceof \DateTimeInterface) {
+      $this->expiresAt = $expiresAt->getTimestamp();
+    } elseif (is_int($expiresAt) || null === $expiresAt) {
+      $this->expiresAt = $expiresAt;
+    } else {
+      throw new \InvalidArgumentException('Cache item ttl/expiresAt must be of type integer or \DateTimeInterface.');
+    }
+
+    return $this;
   }
 
   public function expiresAfter($interval) {
@@ -49,12 +59,13 @@ class ServicesCache implements CacheItemInterface {
     }
 
     $this->expiresAt = $expires->add($interval);
+    return $this;
   }
 
   /**
-   * Get expiration datetime
+   * Get expiration timestamp
    *
-   * @return null|\DateTimeInterface
+   * @return null
    */
   public function getExpiresAt() {
     return $this->expiresAt;
