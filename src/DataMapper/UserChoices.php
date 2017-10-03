@@ -175,13 +175,7 @@ class UserChoices {
   private function createPlayerChoiceDocument(ChoiceDocumentModel $choiceDocument, array $playerEventList, int $currentLiveEpisodeId, array $importantEventsSymbolDictionary): array {
 
     if (empty($playerEventList)) {
-      return [
-        'meta' => [
-          'status' => 'fail',
-          'message' => 'No events for this user.',
-          'type' => $choiceDocument->getChoiceDocType(),
-        ]
-      ];
+      return $this->statusFailResponse($choiceDocument->getChoiceDocType());
     }
 
     $masterChoiceDoc = $choiceDocument->getData();
@@ -206,15 +200,10 @@ class UserChoices {
       }
     }
 
-    return [
-      'meta' => [
-        'status' => 'success',
-        'message' => 'Events found for this user.',
-        'type' => $choiceDocument->getChoiceDocType(),
-      ],
-      'choice_document' => $playerChoiceDoc
-    ];
+    $response = $this->statusResponse('success', 'Events found for this user.', $choiceDocument->getChoiceDocType());
+    $response['choice_document'] = $playerChoiceDoc;
 
+    return $response;
   }
 
   /**
@@ -325,7 +314,7 @@ class UserChoices {
    * @return array
    */
   private function statusFailResponse(string $type): array {
-    return $this->statusResponse('failed', 'No save data for this player.', $type);
+    return $this->statusResponse('failed', 'No events were found for this player.', $type);
   }
 
   /**
