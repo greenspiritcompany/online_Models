@@ -78,6 +78,17 @@ class UserChoices {
       }
     }
 
+    // Get the full choice docs for this game
+    $choiceDocQuery = new ChoiceDocumentModel();
+    $choiceDocQuery->setChoiceDocType($docType);
+    $choiceDocQuery->setGameName($game);
+    $choiceDocs = $this->choiceDocument->find($choiceDocQuery);
+
+    if (!$choiceDocs) {
+      $this->log->error('No Choice Documents were found.', ['game' => $game, 'type' => $docType]);
+      return $this->statusFailResponse('choice_doc');
+    }
+
     // Get the services account ID for this user
     $servicesAccountId = $this->servicesAccount->getIdFromAuthId($userID);
 
@@ -129,16 +140,6 @@ class UserChoices {
     $playerEventList = array_map(function($match) {
       return $match['base64_event_value'];
     }, $userChoiceData['matches']);
-
-    $choiceDocQuery = new ChoiceDocumentModel();
-    $choiceDocQuery->setChoiceDocType($docType);
-    $choiceDocQuery->setGameName($game);
-    $choiceDocs = $this->choiceDocument->find($choiceDocQuery);
-
-    if (!$choiceDocs) {
-      $this->log->error('No Choice Documents were found.', ['game' => $game, 'type' => $docType]);
-      return $this->statusFailResponse($docType);
-    }
 
     // Determine what the current live episode is for this game
     $currentLiveEpisodeId = '201'; // TODO: Not enforcing this yet
