@@ -47,14 +47,14 @@ class UserChoices {
   }
 
   /**
-   * Undocumented function
+   * Return a player choice document along with meta information
    *
    * @param int $userID
    * @param string $game
    * @param string $docType
-   * @return void
+   * @return array
    */
-  public function fetch(int $userID, string $game, string $docType = 'stats_extended', string $namespace = null) {
+  public function fetch(int $userID, string $game, string $docType = 'stats_extended', string $namespace = null): array {
 
     if (!$namespace) {
       $namespace = getenv('ENV');
@@ -210,7 +210,7 @@ class UserChoices {
    * @param array $symbol_dictionary
    * @return bool
    */
-  private function evalExpressionString(string $expression_string, array $player_events, array $symbol_dictionary) {
+  private function evalExpressionString(string $expression_string, array $player_events, array $symbol_dictionary): bool {
 
     if (strlen($expression_string) < 1) {
       return false;
@@ -261,7 +261,7 @@ class UserChoices {
    * @param array $symbol_dictionary
    * @return bool
    */
-  private function doesThisEventExistInPlayersEvents(string $dlg_node, array $player_events, array $symbol_dictionary) {
+  private function doesThisEventExistInPlayersEvents(string $dlg_node, array $player_events, array $symbol_dictionary): bool {
     $translated_value = null;
     if (isset($symbol_dictionary[$dlg_node])) {
       $translated_value = $symbol_dictionary[$dlg_node];
@@ -281,7 +281,7 @@ class UserChoices {
    * @param string $percentage
    * @return array
    */
-  private function putPercentageInDescription(array $description_array, string $percentage) {
+  private function putPercentageInDescription(array $description_array, string $percentage): array {
     $result_array = [];
 
     foreach ($description_array as $language => $text) {
@@ -299,7 +299,7 @@ class UserChoices {
    * @param string $needle
    * @return bool
    */
-  private function startsWith(string $haystack, string $needle) {
+  private function startsWith(string $haystack, string $needle): bool {
     $length = strlen($needle);
     return (substr($haystack, 0, $length) === $needle);
   }
@@ -309,7 +309,7 @@ class UserChoices {
    *
    * @return array
    */
-  private function statusFailResponse(string $type) {
+  private function statusFailResponse(string $type): array {
     return $this->statusResponse('failed', 'No save data for this player.', $type);
   }
 
@@ -320,7 +320,7 @@ class UserChoices {
    * @param string $message
    * @return array
    */
-  private function statusResponse(string $status, string $message, string $type) {
+  private function statusResponse(string $status, string $message, string $type): array {
     return [
       'meta' => [
         'status' => $status,
