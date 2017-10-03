@@ -90,9 +90,4 @@ class Game {
     return $result;
   }
 
-
-  public function add(GameModel $game) {
-
-  }
-
 }
