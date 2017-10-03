@@ -18,7 +18,6 @@ use Psr\Cache\CacheItemPoolInterface;
 
 class UserChoices {
 
-  const CACHE_NAMESPACE_FETCH_CHOICES = 'CloudSaveFetchChoices|';
   const CACHE_NAMESPACE_CHOICE_DATA = 'CloudSaveChoiceData|';
 
   private $importantEvents;
@@ -62,7 +61,16 @@ class UserChoices {
 
     // Has the whole user choice doc been cached?
     if ($this->cache) {
-      $cacheItem = $this->cache->getItem($namespace . '|' . self::CACHE_NAMESPACE_FETCH_CHOICES . $userID . '|' . $game . '|' . $docType);
+
+      $cacheKey = implode('|', [
+        $namespace,
+        'FetchUserChoices',
+        $userID,
+        $game,
+        $docType
+      ]);
+
+      $cacheItem = $this->cache->getItem($cacheKey);
       $playerResults = $cacheItem->get();
 
       if ($cacheItem->isHit()) {
@@ -79,7 +87,14 @@ class UserChoices {
     }
 
     // Check if the important events have been placed in cache by Kinesis
-    $servicesCacheKey = '|' . $namespace . '|' . self::CACHE_NAMESPACE_CHOICE_DATA . $servicesAccountId . '|' . $game;
+    $servicesCacheKey = implode('|', [
+      '',
+      $namespace,
+      'CloudSaveChoiceData',
+      $servicesAccountId,
+      $game
+    ]);
+
     $servicesCacheItem = $this->servicesCache->getItem($servicesCacheKey);
 
     // If there is no cache hit make the Kinesis request
