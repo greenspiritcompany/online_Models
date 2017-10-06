@@ -19,6 +19,7 @@ use Psr\Cache\CacheItemPoolInterface;
 class UserChoices {
 
   const CACHE_NAMESPACE_CHOICE_DATA = 'CloudSaveChoiceData|';
+  const CHOICE_DOC_EXCLUDE = ['count', 'options', 'expression', 'nodeidintval', 'nodeidfullintval'];
 
   private $importantEvents;
   private $gameData;
@@ -181,6 +182,8 @@ class UserChoices {
 
     $masterChoiceDoc = $choiceDocument->getData();
 
+    $choiceDocExclude = array_fill_keys(self::CHOICE_DOC_EXCLUDE, null);
+
     $playerChoiceDoc = [];
     foreach($masterChoiceDoc['choices'] as $choice) {
       foreach ($choice['options'] as $option) {
@@ -191,12 +194,23 @@ class UserChoices {
         }
         $is_match = $this->evalExpressionString($expr, $playerEventList, $importantEventsSymbolDictionary);
         if ($is_match) {
-          $playerChoiceDoc[] = [
-            'question' => $choice['description'],
-            'description' => $this->putPercentageInDescription($option['description'], $option['percent']),
-            'percent' => $option['percent'],
-            'sequence' => $choice['seq'],
-          ];
+
+          // Create a new player choice doc from the choice and matched option
+          $playerChoice = array_merge(
+            $choice,
+            $option,
+            [
+              'question' => $choice['description'],
+              'description' => $this->putPercentageInDescription($option['description'], $option['percent']),
+              'description2' => !empty($option['description2']) ? $this->putPercentageInDescription($option['description2'], $option['percent']) : null,
+            ],
+            $choiceDocExclude
+          );
+
+          // Remove empty keys
+          $playerChoice = array_filter($playerChoice);
+
+          $playerChoiceDoc[] = $playerChoice;
         }
       }
     }
