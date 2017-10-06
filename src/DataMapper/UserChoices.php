@@ -194,7 +194,9 @@ class UserChoices {
         }
         $is_match = $this->evalExpressionString($expr, $playerEventList, $importantEventsSymbolDictionary);
         if ($is_match) {
-          $playerChoiceDoc[] = array_filter(array_merge(
+
+          // Create a new player choice doc from the choice and matched option
+          $playerChoice = array_merge(
             $choice,
             $option,
             [
@@ -203,7 +205,12 @@ class UserChoices {
               'description2' => !empty($option['description2']) ? $this->putPercentageInDescription($option['description2'], $option['percent']) : null,
             ],
             $choiceDocExclude
-          ));
+          );
+
+          // Remove empty keys
+          $playerChoice = array_filter($playerChoice);
+
+          $playerChoiceDoc[] = $playerChoice;
         }
       }
     }
