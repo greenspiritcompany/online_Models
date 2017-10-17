@@ -5,23 +5,29 @@ use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\CacheItemInterface as CacheItem;
 use Telltale\Model\ServicesCache as ServicesCacheItem;
 
+/**
+* Services Cache Pool
+*
+*/
 class ServicesCache implements CacheItemPoolInterface {
 
+  const SEPARATOR_TAG = '|';
+
   /**
-   * @type \Memcached
-   */
+  * @type \Memcached
+  */
   protected $cache;
 
   /**
-   * @type ServicesCacheItem[] deferred
-   */
+  * @type ServicesCacheItem[] deferred
+  */
   protected $deferred = [];
 
   public function __construct(\Memcached $cache) {
     $this->cache = $cache;
   }
 
-  public function getItem($key) {
+  public function getItem(string $key): ServicesCacheItem {
     $value = $this->cache->get($key);
     if ($this->cache->getResultCode() !== \Memcached::RES_SUCCESS) {
       return $this->buildItem($key, false);
@@ -29,7 +35,7 @@ class ServicesCache implements CacheItemPoolInterface {
     return $this->buildItem($key, true, $value);
   }
 
-  public function getItems(array $keys = []) {
+  public function getItems(array $keys = []): array {
     if (empty($keys)) {
       return [];
     }
@@ -41,7 +47,7 @@ class ServicesCache implements CacheItemPoolInterface {
     return $this->buildItems($keys, $data);
   }
 
-  public function hasItem($key) {
+  public function hasItem(string $key): bool {
     $client = $this->cache->get($key);
     return $client->getResultCode() == \Memcached::RES_SUCCESS;
   }
@@ -51,17 +57,17 @@ class ServicesCache implements CacheItemPoolInterface {
     return true;
   }
 
-  public function deleteItem($key) {
+  public function deleteItem(string $key): bool {
     $this->cache->delete($key);
     return true;
   }
 
-  public function deleteItems(array $keys) {
+  public function deleteItems(array $keys): bool {
     $this->cache->deleteMulti($keys);
     return true;
   }
 
-  public function save(CacheItem $item) {
+  public function save(CacheItem $item): bool {
 
     $this->cache->set(
       $item->getKey(),
@@ -72,17 +78,17 @@ class ServicesCache implements CacheItemPoolInterface {
     return true;
   }
 
-  public function saveDeferred(CacheItem $item) {
+  public function saveDeferred(CacheItem $item): bool {
     $this->deferred[$item->getKey()] = $item;
     return true;
   }
 
-  public function commit() {
+  public function commit(): bool {
     $saved = true;
     foreach ($this->deferred as $item) {
-        if (!$this->save($item)) {
-            $saved = false;
-        }
+      if (!$this->save($item)) {
+        $saved = false;
+      }
     }
     $this->deferred = [];
 
@@ -90,13 +96,13 @@ class ServicesCache implements CacheItemPoolInterface {
   }
 
   /**
-   * Build Items
-   *
-   * @param array $keys
-   * @param array $data
-   * @return array
-   */
-  protected function buildItems($keys, $data) {
+  * Build Items
+  *
+  * @param array $keys
+  * @param array $data
+  * @return array
+  */
+  protected function buildItems(array $keys, $data): array {
     $result = [];
 
     foreach($keys as $key) {
@@ -110,14 +116,14 @@ class ServicesCache implements CacheItemPoolInterface {
   }
 
   /**
-   * Build Item object
-   *
-   * @param string $key
-   * @param bool $isHit
-   * @param mixed $value stored value
-   * @return Item
-   */
-  protected function buildItem($key, $isHit, $value = null) {
+  * Build Item object
+  *
+  * @param string $key
+  * @param bool $isHit
+  * @param mixed $value stored value
+  * @return Item
+  */
+  protected function buildItem(string $key, bool $isHit, $value = null): ServicesCacheItem {
     return new ServicesCacheItem($key, $isHit, $value);
   }
 
