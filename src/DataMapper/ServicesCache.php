@@ -27,7 +27,13 @@ class ServicesCache implements CacheItemPoolInterface {
     $this->cache = $cache;
   }
 
-  public function getItem(string $key): ServicesCacheItem {
+  /**
+   * Returns a Cache Item representing the specified key.
+   *
+   * @param string $key
+   * @return ServicesCacheItem
+   */
+  public function getItem($key) {
     $value = $this->cache->get($key);
     if ($this->cache->getResultCode() !== \Memcached::RES_SUCCESS) {
       return $this->buildItem($key, false);
@@ -35,7 +41,13 @@ class ServicesCache implements CacheItemPoolInterface {
     return $this->buildItem($key, true, $value);
   }
 
-  public function getItems(array $keys = []): array {
+  /**
+   * Returns a traversable set of cache items.
+   *
+   * @param array $keys
+   * @return array
+   */
+  public function getItems($keys = []) {
     if (empty($keys)) {
       return [];
     }
@@ -47,27 +59,56 @@ class ServicesCache implements CacheItemPoolInterface {
     return $this->buildItems($keys, $data);
   }
 
-  public function hasItem(string $key): bool {
+  /**
+   * Confirms if the cache contains specified cache item.
+   *
+   * @param string $key
+   * @return bool
+   */
+  public function hasItem($key) {
     $client = $this->cache->get($key);
     return $client->getResultCode() == \Memcached::RES_SUCCESS;
   }
 
+  /**
+   * Deletes all items in the pool
+   *
+   * @return bool
+   */
   public function clear() {
     $this->cache->flush();
     return true;
   }
 
-  public function deleteItem(string $key): bool {
+  /**
+   * Removes the item from the pool.
+   *
+   * @param string $key
+   * @return bool
+   */
+  public function deleteItem($key) {
     $this->cache->delete($key);
     return true;
   }
 
-  public function deleteItems(array $keys): bool {
+  /**
+   * Removes multiple items from the pool.
+   *
+   * @param array $keys
+   * @return bool
+   */
+  public function deleteItems($keys) {
     $this->cache->deleteMulti($keys);
     return true;
   }
 
-  public function save(CacheItem $item): bool {
+  /**
+   * Persists a cache item immediately.
+   *
+   * @param CacheItem $item
+   * @return bool
+   */
+  public function save($item) {
 
     $this->cache->set(
       $item->getKey(),
@@ -78,12 +119,23 @@ class ServicesCache implements CacheItemPoolInterface {
     return true;
   }
 
-  public function saveDeferred(CacheItem $item): bool {
+  /**
+   * Sets a cache item to be persisted later.
+   *
+   * @param CacheItem $item
+   * @return bool
+   */
+  public function saveDeferred($item) {
     $this->deferred[$item->getKey()] = $item;
     return true;
   }
 
-  public function commit(): bool {
+  /**
+   * Persists any deferred cache items.
+   *
+   * @return bool
+   */
+  public function commit() {
     $saved = true;
     foreach ($this->deferred as $item) {
       if (!$this->save($item)) {
