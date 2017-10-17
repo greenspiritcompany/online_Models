@@ -124,7 +124,7 @@ class AdminUser {
     // Token must still match the user's
     $expectedToken = $user->authToken($time);
     if (!hash_equals($token, $expectedToken)) {
-      throw new \Exception('Token Validation Failed', 401);
+      throw new \Exception('Token Validation Failed');
     }
 
     return $user;
