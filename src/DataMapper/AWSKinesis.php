@@ -61,8 +61,8 @@ class AWSKinesis {
       $this->logger->error('Unable to send a document to ' . $kinesis_stream_name);
       return false;
     } catch (\Exception $e) {
-      $this->logger->error('Unable to send a document to ' . $kinesis_stream_name);
-      throw new \Exception('Unable to send CloudSave Process Request. ' . $e->getMessage(), 500);
+      $this->logger->error('Unable to send a document to ' . $kinesis_stream_name . '. ' . $e->getMessage());
+      throw new \Exception('Unable to send CloudSave Process Request.', 500);
     }
 
     return true;
