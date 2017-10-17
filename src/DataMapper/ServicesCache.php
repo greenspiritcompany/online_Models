@@ -47,7 +47,7 @@ class ServicesCache implements CacheItemPoolInterface {
    * @param array $keys
    * @return array
    */
-  public function getItems($keys = []) {
+  public function getItems(array $keys = array()) {
     if (empty($keys)) {
       return [];
     }
@@ -97,7 +97,7 @@ class ServicesCache implements CacheItemPoolInterface {
    * @param array $keys
    * @return bool
    */
-  public function deleteItems($keys) {
+  public function deleteItems(array $keys) {
     $this->cache->deleteMulti($keys);
     return true;
   }
@@ -108,7 +108,7 @@ class ServicesCache implements CacheItemPoolInterface {
    * @param CacheItem $item
    * @return bool
    */
-  public function save($item) {
+  public function save(CacheItem $item) {
 
     $this->cache->set(
       $item->getKey(),
@@ -125,7 +125,7 @@ class ServicesCache implements CacheItemPoolInterface {
    * @param CacheItem $item
    * @return bool
    */
-  public function saveDeferred($item) {
+  public function saveDeferred(CacheItem $item) {
     $this->deferred[$item->getKey()] = $item;
     return true;
   }
