@@ -221,10 +221,29 @@ class UserChoices {
       return $this->statusFailResponse('choice_doc');
     }
 
-    // Get user choice data from access point
-    $userChoiceData = $this->dynamoDB->accessPointGameEvents($accessPointID, $game, $namespace);
+    // Check if the important events have been placed in cache
+    $servicesCacheKey = implode('|', [
+      '',
+      $namespace,
+      'accessPointChoiceData',
+      $accessPointID,
+      $game
+    ]);
 
-    $playerEventList = $this->getPlayerEventList($userChoiceData);
+    $servicesCacheItem = $this->servicesCache->getItem($servicesCacheKey);
+
+     // If there is no cache hit get game events from dynamoDB
+    if (!$servicesCacheItem->isHit()) {
+      // Get user choice data from access point
+      $userChoiceData = $this->dynamoDB->accessPointGameEvents($accessPointID, $game, $namespace);
+      // Cache in services
+      $servicesCacheItem->set($userChoiceData);
+      $servicesCacheItem->expiresAt(3600);
+
+      $this->servicesCache->save($servicesCacheItem);
+    }
+
+    $playerEventList = $this->getPlayerEventList($servicesCacheItem->get());
 
     if (empty($playerEventList)) {
       // If user has no events it is safe to exit out early with "no results" response.
