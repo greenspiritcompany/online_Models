@@ -143,8 +143,8 @@ class ChoiceDocument implements \JsonSerializable {
     return $this->json_data;
   }
 
-  public function getData() {
-    return $this->data;
+  public function getData(): array {
+    return is_array($this->data) ? $this->data : [];
   }
 
   /**
