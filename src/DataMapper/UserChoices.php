@@ -8,6 +8,7 @@ use Telltale\DataMapper\Game;
 use Telltale\DataMapper\ServicesAccount;
 use Telltale\DataMapper\ChoiceDocument;
 use Telltale\DataMapper\AWSKinesis;
+use Telltale\DataMapper\AWSDynamoDB;
 
 use Telltale\Model\ChoiceDocument as ChoiceDocumentModel;
 
@@ -19,6 +20,8 @@ use Psr\Cache\CacheItemPoolInterface;
 class UserChoices {
 
   const CACHE_NAMESPACE_CHOICE_DATA = 'CloudSaveChoiceData|';
+
+  // What keys should *not* be returned in the choice document?
   const CHOICE_DOC_EXCLUDE = ['count', 'options', 'expression', 'nodeidintval', 'nodeidfullintval'];
 
   private $importantEvents;
@@ -30,6 +33,15 @@ class UserChoices {
   private $kinesis;
   private $log;
 
+  /**
+   * Setup new UserChoices data mapper
+   *
+   * @param PDO $globalPDO
+   * @param PDO $servicesPDO
+   * @param CacheItemPoolInterface $cache
+   * @param CacheItemPoolInterface $servicesCache
+   * @param [type] $logger
+   */
   public function __construct(PDO $globalPDO, PDO $servicesPDO, CacheItemPoolInterface $cache = null, CacheItemPoolInterface $servicesCache, $logger = null) {
 
     $this->log = $logger ?? new NullLogger();
@@ -44,6 +56,7 @@ class UserChoices {
     $this->choiceDocument = new ChoiceDocument($servicesPDO, $cache);
 
     $this->kinesis = new AWSKinesis($this->log);
+    $this->dynamoDB = new AWSDynamoDB($this->log);
   }
 
   /**
@@ -130,17 +143,14 @@ class UserChoices {
     }
 
     // Get user choice data from cache
-    $userChoiceData = json_decode($servicesCacheItem->get(), true);
+    $userChoiceData = json_decode($servicesCacheItem->get(), true) ?? [];
+
+    $playerEventList = $this->getPlayerEventList($userChoiceData);
 
     // If we don't have any matches yet, return a pending message
-    if (!array_key_exists('matches', $userChoiceData)) {
-      return $this->statusResponse($userChoiceData['status'] ?: "pending", "Waiting for player data.", $docType);
+    if (empty($userChoiceData)) {
+      return $this->statusResponse($userChoiceData['status'] ?: "pending", "Waiting for player data...", $docType);
     }
-
-    // Extract the base64 event values that we will use to determine the players choices
-    $playerEventList = array_map(function($match) {
-      return $match['base64_event_value'];
-    }, $userChoiceData['matches']);
 
     // Determine what the current live episode is for this game
     $currentLiveEpisodeId = '201'; // TODO: Not enforcing this yet
@@ -151,6 +161,85 @@ class UserChoices {
       $this->log->error('No important events were found.', ['game' => $game]);
       return $this->statusFailResponse($docType);
     }
+
+    $playerChoiceDocument = $this->createPlayerChoiceDocument($choiceDocs, $playerEventList, $currentLiveEpisodeId, $importantEventsSymbolDictionary);
+
+    if ($this->cache) {
+      // Store these results in the cache
+      $exp = new \DateInterval('PT1H'); // 1 hour
+      $cacheItem->expiresAfter($exp);
+      $cacheItem->set($playerChoiceDocument);
+      $this->cache->save($cacheItem);
+    }
+
+    return $playerChoiceDocument;
+  }
+
+  /**
+   * Return a player choice document by access point id
+   * Returns the same format as $this->fetch but without a userID
+   *
+   * @param int $accessPointID
+   * @param string $game
+   * @param string $docType
+   * @param string $namespace
+   * @return array
+   */
+  public function fetchByAccessPoint(int $accessPointID, string $game, string $docType = 'stats_extended', string $namespace = null): array {
+
+    if (!$namespace) {
+      $namespace = getenv('ENV');
+    }
+
+    // Has the whole user choice doc been cached?
+    if ($this->cache) {
+
+      $cacheKey = implode('|', [
+        $namespace,
+        'fetchByAccessPoint',
+        $accessPointID,
+        $game,
+        $docType
+      ]);
+
+      $cacheItem = $this->cache->getItem($cacheKey);
+      $playerResults = $cacheItem->get();
+
+      if ($cacheItem->isHit()) {
+        return $playerResults;
+      }
+    }
+
+    // Get the full choice docs for this game
+    $choiceDocQuery = new ChoiceDocumentModel();
+    $choiceDocQuery->setChoiceDocType($docType);
+    $choiceDocQuery->setGameName($game);
+    $choiceDocs = $this->choiceDocument->find($choiceDocQuery);
+
+    if (!$choiceDocs) {
+      $this->log->error('No Choice Documents were found.', ['game' => $game, 'type' => $docType]);
+      return $this->statusFailResponse('choice_doc');
+    }
+
+    // Get user choice data from access point
+    $userChoiceData = $this->dynamoDB->accessPointGameEvents($accessPointID, $game, $namespace);
+
+    $playerEventList = $this->getPlayerEventList($userChoiceData);
+
+    if (empty($playerEventList)) {
+      // If user has no events it is safe to exit out early with "no results" response.
+      return $this->statusFailResponse($docType);
+    }
+
+    $importantEventsSymbolDictionary = $this->importantEvents->fetchSymbolDictionary($game);
+
+    if (empty($importantEventsSymbolDictionary)) {
+      $this->log->error('No important events were found.', ['game' => $game]);
+      return $this->statusFailResponse($docType);
+    }
+
+    // Determine what the current live episode is for this game
+    $currentLiveEpisodeId = '201'; // TODO: Not enforcing this yet
 
     $playerChoiceDocument = $this->createPlayerChoiceDocument($choiceDocs, $playerEventList, $currentLiveEpisodeId, $importantEventsSymbolDictionary);
 
@@ -182,10 +271,21 @@ class UserChoices {
 
     $masterChoiceDoc = $choiceDocument->getData();
 
+    if (empty($masterChoiceDoc['choices'])) {
+      $this->log->error('Choice document has no valid choices ' . $choiceDocument->getChoiceDocType());
+      return $this->statusResponse('failed', 'No choice data was found.', $choiceDocument->getChoiceDocType());
+    }
+
     $choiceDocExclude = array_fill_keys(self::CHOICE_DOC_EXCLUDE, null);
 
     $playerChoiceDoc = [];
     foreach($masterChoiceDoc['choices'] as $choice) {
+
+      if (empty($choice['options'])) {
+        $this->log->error('No choice options were in the choice document for ' . $choiceDocument->getGameName());
+        continue;
+      }
+
       foreach ($choice['options'] as $option) {
         $expr = $option['expression'];
 
@@ -215,10 +315,29 @@ class UserChoices {
       }
     }
 
-    $response = $this->statusResponse('success', 'Events found for this user.', $choiceDocument->getChoiceDocType());
+    $response = $this->statusResponse('success', 'Events were found for this player.', $choiceDocument->getChoiceDocType());
     $response['choice_document'] = $playerChoiceDoc;
 
     return $response;
+  }
+
+  /**
+   * Return the base64 event values that we will use to determine the players choices
+   *
+   * @param array $userChoiceData
+   * @return array
+   */
+  private function getPlayerEventList(array $userChoiceData): array {
+
+    // If we don't have any matches return empty result
+    if (!array_key_exists('matches', $userChoiceData)) {
+      return [];
+    }
+
+    // For every match, return the base64_event_value
+    return array_map(function($match) {
+      return $match['base64_event_value'] ?? '';
+    }, $userChoiceData['matches']);
   }
 
   /**
