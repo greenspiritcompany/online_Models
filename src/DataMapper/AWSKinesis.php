@@ -5,25 +5,18 @@ use Aws\Kinesis\KinesisClient;
 use Psr\Log;
 
 class AWSKinesis {
-  private static $instance;
-  private static $kinesis;
+
+  private $client;
   private $logger;
-
-  public static function getInstance($logger) {
-    if (null === static::$instance) {
-      static::$instance = new AWSKinesis($logger);
-    }
-
-    return static::$instance;
-  }
 
   public function __construct(Log\LoggerInterface $logger = null) {
     $this->logger = $logger ?? new Log\NullLogger();
+
     $config = [
       'region' => 'us-west-2',
       'version' => 'latest'
     ];
-    static::$kinesis = KinesisClient::factory($config);
+    $this->client = new KinesisClient($config);
   }
 
   /**
@@ -49,11 +42,8 @@ class AWSKinesis {
 
     $this->addDocumentToRecords($kinesis_records, $document);
 
-    // The Kinesis Client is treated as a singleton instance.
-    $kinesis = $this->getInstance($this->logger);
-
     try {
-      $kinesis->putRecords($kinesis_records);
+      $this->client->putRecords($kinesis_records);
     } catch (Aws\Kinesis\Exception\ResourceNotFoundException $e) {
       $this->logger->error('Unable to find the kinesis stream ' . $kinesis_stream_name);
       return false;
@@ -75,7 +65,7 @@ class AWSKinesis {
    * @return array Record keys that failed to be placed in Kinesis
    */
   private function putRecords(array $records): array {
-    $kinesis_response = static::$kinesis->putRecords($records);
+    $kinesis_response = $this->client->putRecords($records);
 
     $failed_records = [];
     foreach ($kinesis_response['Records'] as $key => $record) {
