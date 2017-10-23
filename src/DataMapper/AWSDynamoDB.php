@@ -1,7 +1,7 @@
 <?php
 namespace Telltale\DataMapper;
 
-use Aws\DynamoDb\DynamoDBClient;
+use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Exception\DynamoDbException;
 use Psr\Log;
 
