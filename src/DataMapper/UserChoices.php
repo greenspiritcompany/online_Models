@@ -375,45 +375,47 @@ class UserChoices {
    */
   private function evalExpressionString(string $expression_string, array $player_events, array $symbol_dictionary): bool {
 
-    if (strlen($expression_string) < 1) {
+    $expressions = explode(" ", $expression_string);
+
+    if (empty($expressions)) {
+      $this->log->warning('evalExpressionString has no expressions');
       return false;
     }
 
     $translated_evaluation_string = "";
-    $expressions = explode(" ", $expression_string);
-    if (isset($expressions)) {
-      foreach ($expressions as $expression) {
-        if (strpos($expression,'(') !== false | strpos($expression,')') !== false | strpos($expression,'|') !== false | strpos($expression,'&') !== false) {
-          $translated_evaluation_string =  $translated_evaluation_string . $expression . " ";
+    foreach ($expressions as $expression) {
+      if (strpos($expression,'(') !== false | strpos($expression,')') !== false | strpos($expression,'|') !== false | strpos($expression,'&') !== false) {
+        $translated_evaluation_string = $translated_evaluation_string . $expression . " ";
+      }
+      if ($this->startsWith($expression,'{')) {
+        if ($this->doesThisEventExistInPlayersEvents($expression, $player_events, $symbol_dictionary)) {
+            $translated_evaluation_string = $translated_evaluation_string . 'true' . " ";
+        } else {
+            $translated_evaluation_string = $translated_evaluation_string . 'false' . " ";
         }
-        if ($this->startsWith($expression,'{')) {
-          if ($this->doesThisEventExistInPlayersEvents($expression, $player_events, $symbol_dictionary)) {
-              $translated_evaluation_string = $translated_evaluation_string . 'true' . " ";
-          } else {
-              $translated_evaluation_string = $translated_evaluation_string . 'false' . " ";
-          }
-        }
-        if ($this->startsWith($expression,'~{')) {
-          if (!$this->doesThisEventExistInPlayersEvents($expression, $player_events, $symbol_dictionary)) {
-              $translated_evaluation_string = $translated_evaluation_string . 'true' . " ";
-          } else {
-              $translated_evaluation_string = $translated_evaluation_string . 'false' . " ";
-          }
+      }
+      if ($this->startsWith($expression,'~{')) {
+        if (!$this->doesThisEventExistInPlayersEvents($expression, $player_events, $symbol_dictionary)) {
+            $translated_evaluation_string = $translated_evaluation_string . 'true' . " ";
+        } else {
+            $translated_evaluation_string = $translated_evaluation_string . 'false' . " ";
         }
       }
     }
 
-
-    if (!isset($translated_evaluation_string)) return false;
-    if (strlen($translated_evaluation_string) < 1) return false;
-
-    $result = null;
-    eval(sprintf('$result = %s;', $translated_evaluation_string));
-    if (isset($result) && 1 == $result) {
-      return true;
+    if (empty($translated_evaluation_string)) {
+      $this->log->warning('Failed to make a translated evaluation string');
+      return false;
     }
 
-    return false;
+    $result = 0;
+    try {
+      eval(sprintf('$result = %s;', $translated_evaluation_string));
+    } catch (\ParseError $e) {
+      $this->log->error('Failed to eval translated string: "' . $translated_evaluation_string . '". ' . $e->getMessage());
+    }
+
+    return ($result == 1);
   }
 
   /**
