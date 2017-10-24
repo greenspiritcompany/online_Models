@@ -315,6 +315,12 @@ class UserChoices {
         $is_match = $this->evalExpressionString($expr, $playerEventList, $importantEventsSymbolDictionary);
         if ($is_match) {
 
+          // If there is no percent or 0 default to 50%
+          if (empty($option['percent']) || $option['percent'] == '0') {
+            $this->log->notice('Choice option is missing percent. Defaulting to 50%', ['game' => $choiceDocument->getGameName(), 'type' => $choiceDocument->getChoiceDocType(), 'option' => $option]);
+            $option['percent'] = '50';
+          }
+
           // Create a new player choice doc from the choice and matched option
           $playerChoice = array_merge(
             $choice,
