@@ -291,7 +291,7 @@ class UserChoices {
     $masterChoiceDoc = $choiceDocument->getData();
 
     if (empty($masterChoiceDoc['choices'])) {
-      $this->log->warning('Choice document has no valid choices ' . $choiceDocument->getChoiceDocType());
+      $this->log->warning('Choice document has no valid choices.', ['game' => $choiceDocument->getGameName(), 'type' => $choiceDocument->getChoiceDocType()]);
       return $this->statusResponse('failed', 'No choice data was found.', $choiceDocument->getChoiceDocType());
     }
 
@@ -301,7 +301,7 @@ class UserChoices {
     foreach($masterChoiceDoc['choices'] as $choice) {
 
       if (empty($choice['options'])) {
-        $this->log->warning('No choice options were in the choice document for ' . $choiceDocument->getGameName());
+        $this->log->warning('No choice options were in the choice document.', ['game' => $choiceDocument->getGameName(), 'type' => $choiceDocument->getChoiceDocType()]);
         continue;
       }
 
@@ -309,7 +309,7 @@ class UserChoices {
         $expr = $option['expression'];
 
         if (empty($expr)) {
-          $this->log->warning('Choice option has no expression for ' . $choiceDocument->getGameName());
+          $this->log->warning('Choice document option has no expression.', ['game' => $choiceDocument->getGameName(), 'type' => $choiceDocument->getChoiceDocType(), 'option' => $option]);
           continue;
         }
         $is_match = $this->evalExpressionString($expr, $playerEventList, $importantEventsSymbolDictionary);
@@ -336,7 +336,7 @@ class UserChoices {
     }
 
     if (empty($playerChoiceDoc)) {
-      $this->log->warning('Player had no matching expressions for ' . $choiceDocument->getGameName());
+      $this->log->warning('Player had no matching expressions.', ['game' => $choiceDocument->getGameName(), 'type' => $choiceDocument->getChoiceDocType()]);
       return $this->statusResponse('failed', 'No matching choice data was found.', $choiceDocument->getChoiceDocType());
     }
 
@@ -404,7 +404,7 @@ class UserChoices {
     }
 
     if (empty($translated_evaluation_string)) {
-      $this->log->warning('Failed to make a translated evaluation string');
+      $this->log->warning('Failed to make a translated evaluation string.');
       return false;
     }
 
@@ -412,7 +412,10 @@ class UserChoices {
     try {
       eval(sprintf('$result = %s;', $translated_evaluation_string));
     } catch (\ParseError $e) {
-      $this->log->error('Failed to eval translated string: "' . $translated_evaluation_string . '". ' . $e->getMessage());
+      $this->log->error('Failed to eval translated string.', [
+        'Exception' => $e->getMessage(),
+        'translated_evaluation_string' => $translated_evaluation_string,
+      ]);
     }
 
     return ($result == 1);
