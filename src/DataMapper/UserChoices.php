@@ -309,7 +309,7 @@ class UserChoices {
         $expr = $option['expression'];
 
         if (empty($expr)) {
-          $this->log->warning('Choice option has no expression for' . $choiceDocument->getGameName());
+          $this->log->warning('Choice option has no expression for ' . $choiceDocument->getGameName());
           continue;
         }
         $is_match = $this->evalExpressionString($expr, $playerEventList, $importantEventsSymbolDictionary);
@@ -333,6 +333,11 @@ class UserChoices {
           $playerChoiceDoc[] = $playerChoice;
         }
       }
+    }
+
+    if (empty($playerChoiceDoc)) {
+      $this->log->warning('Player had no matching expressions for ' . $choiceDocument->getGameName());
+      return $this->statusResponse('failed', 'No matching choice data was found.', $choiceDocument->getChoiceDocType());
     }
 
     $response = $this->statusResponse('success', 'Events were found for this player.', $choiceDocument->getChoiceDocType());
