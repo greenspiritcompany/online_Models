@@ -59,7 +59,7 @@ class AWSDynamoDB {
    * @return array
    */
   public function accessPointGameEvents(int $accessPointID, string $game, string $environment = 'production'): array {
-    $tableName = ucfirst(strtolower($environment)) . 'Important' . ucfirst(strtolower($game)) . 'Events';
+    $tableName = ucfirst(strtolower($environment)) . ($environment != 'staging' ? 'Important' : '') . ucfirst(strtolower($game)) . 'Events';
 
     // Format the query parameters
     $params = [
