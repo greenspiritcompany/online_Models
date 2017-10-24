@@ -291,7 +291,7 @@ class UserChoices {
     $masterChoiceDoc = $choiceDocument->getData();
 
     if (empty($masterChoiceDoc['choices'])) {
-      $this->log->error('Choice document has no valid choices ' . $choiceDocument->getChoiceDocType());
+      $this->log->warning('Choice document has no valid choices ' . $choiceDocument->getChoiceDocType());
       return $this->statusResponse('failed', 'No choice data was found.', $choiceDocument->getChoiceDocType());
     }
 
@@ -301,7 +301,7 @@ class UserChoices {
     foreach($masterChoiceDoc['choices'] as $choice) {
 
       if (empty($choice['options'])) {
-        $this->log->error('No choice options were in the choice document for ' . $choiceDocument->getGameName());
+        $this->log->warning('No choice options were in the choice document for ' . $choiceDocument->getGameName());
         continue;
       }
 
@@ -309,6 +309,7 @@ class UserChoices {
         $expr = $option['expression'];
 
         if (empty($expr)) {
+          $this->log->warning('Choice option has no expression for' . $choiceDocument->getGameName());
           continue;
         }
         $is_match = $this->evalExpressionString($expr, $playerEventList, $importantEventsSymbolDictionary);
