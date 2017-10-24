@@ -217,7 +217,7 @@ class UserChoices {
     $choiceDocs = $this->choiceDocument->find($choiceDocQuery);
 
     if (!$choiceDocs) {
-      $this->log->error('No Choice Documents were found.', ['game' => $game, 'type' => $docType]);
+      $this->log->info('No Choice Documents were found.', ['game' => $game, 'type' => $docType]);
       return $this->statusFailResponse('choice_doc');
     }
 
@@ -253,7 +253,7 @@ class UserChoices {
     $importantEventsSymbolDictionary = $this->importantEvents->fetchSymbolDictionary($game);
 
     if (empty($importantEventsSymbolDictionary)) {
-      $this->log->error('No important events were found.', ['game' => $game]);
+      $this->log->warning('No important events were found.', ['game' => $game]);
       return $this->statusFailResponse($docType);
     }
 
