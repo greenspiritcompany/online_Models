@@ -70,7 +70,7 @@ class Entitlement {
   /**
     * Add new entitlement to the db
     * Throws PDOException on missing fields or existing entitlement
-    * 
+    *
     * @param EntitlementModel $entitlement
     */
   public function add(EntitlementModel $entitlement) {
@@ -93,7 +93,7 @@ class Entitlement {
   /**
     * Update an entitlement record
     * Note: At this time only the enabled and attributes fields can be changed
-    * 
+    *
     * @param EntitlementModel $entitlement
     */
   public function update(EntitlementModel $entitlement) {
@@ -114,8 +114,34 @@ class Entitlement {
   }
 
   /**
+   * Permanently delete a disabled entitlement
+   *
+   * @param EntitlementModel $entitlement
+   * @return void
+   */
+  public function delete(EntitlementModel $entitlement) {
+
+    if ($entitlement->getEnabled()) {
+      throw new PDOException('Entitlement must be disabled before it can be deleted', 400);
+    }
+
+    $statement = $this->pdo->prepare(
+      'DELETE FROM entitlement
+      WHERE user_id = :user_id AND relation = :relation AND item = :item AND game = :game AND platform = :platform AND enabled = 0'
+    );
+    $statement->execute([
+      'user_id' => $entitlement->getUserId(),
+      'relation' => $entitlement->getRelation(),
+      'item' => $entitlement->getItem(),
+      'game' => $entitlement->getGame(),
+      'platform' => $entitlement->getPlatform(),
+    ]);
+
+  }
+
+  /**
     * Redeem an entitlement by code and assign it to a user
-    * 
+    *
     * @param string $code
     * @param int $userId
     * @throws PDOException
