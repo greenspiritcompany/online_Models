@@ -11,9 +11,10 @@ abstract class AbstractDBTest extends TestCase {
     // only instantiate pdo once for test clean-up/fixture load
     static private $pdo = null;
 
-    // cache tables setup in pdo instance
-    protected $tables = [];
+    // Cache tables setup within the pdo instance
+    static private $tables = [];
 
+    // Null cache pool container
     private $cache = null;
 
     // only instantiate PHPUnit_Extensions_Database_DB_IDatabaseConnection once per test
@@ -64,14 +65,9 @@ abstract class AbstractDBTest extends TestCase {
      * @return void
      */
     protected function setupTableSchema(string $table, string $schema) {
-      if (!in_array($table, $this->tables)) {
-
-        if ($this->conn === null) {
-          $this->getConnection();
-        }
-
-        $this->tables[] = $table;
-        $this->conn->getConnection()->exec("CREATE TABLE `{$table}` ({$schema});");
+      if (!in_array($table, self::$tables)) {
+        $this->getPDO()->exec("CREATE TABLE `{$table}` ({$schema});");
+        self::$tables[] = $table;
       }
     }
 
