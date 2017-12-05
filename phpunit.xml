@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/6.0/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         beStrictAboutCoversAnnotation="true"
+         beStrictAboutOutputDuringTests="true"
+         beStrictAboutTodoAnnotatedTests="true"
+         verbose="true">
+    <testsuite>
+        <directory suffix="Test.php">tests</directory>
+    </testsuite>
+
+    <php>
+        <const name="DBUNIT_DATABASE_MYSQL_DSN" value="mysql:host=127.0.0.1;dbname=phpunit_model_tests;port=8889"/>
+        <const name="DBUNIT_DATABASE_MYSQL_USERNAME" value="root"/>
+        <const name="DBUNIT_DATABASE_MYSQL_PASSWORD" value="root"/>
+    </php>
+</phpunit>

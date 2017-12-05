@@ -28,9 +28,10 @@ abstract class AbstractDBTest extends TestCase {
     final public function getConnection() {
       if ($this->conn === null) {
         if (self::$pdo == null) {
-            self::$pdo = new \PDO('sqlite::memory:');
+            self::$pdo = new \PDO(DBUNIT_DATABASE_MYSQL_DSN, DBUNIT_DATABASE_MYSQL_USERNAME, DBUNIT_DATABASE_MYSQL_PASSWORD);
+            self::$pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         }
-        $this->conn = $this->createDefaultDBConnection(self::$pdo, ':memory:');
+        $this->conn = $this->createDefaultDBConnection(self::$pdo, 'mysql');
       }
 
       return $this->conn;
@@ -66,7 +67,7 @@ abstract class AbstractDBTest extends TestCase {
      */
     protected function setupTableSchema(string $table, string $schema) {
       if (!in_array($table, self::$tables)) {
-        $this->getPDO()->exec("CREATE TABLE `{$table}` ({$schema});");
+        $this->getPDO()->exec("DROP TABLE IF EXISTS `{$table}`; CREATE TABLE `{$table}` ({$schema});");
         self::$tables[] = $table;
       }
     }
