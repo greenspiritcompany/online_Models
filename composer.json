@@ -22,7 +22,9 @@
     },
     "require-dev": {
         "phpunit/phpunit": "@stable",
-        "phpmd/phpmd": "@stable"
+        "phpmd/phpmd": "@stable",
+        "phpunit/dbunit": "^3.0",
+        "thadafinser/psr6-null-cache": "^0.1.0"
     },
     "autoload": {
         "psr-4": {
@@ -32,8 +34,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Telltale\\DataMapper\\Tests\\": "tests",
-            "Telltale\\Model\\Tests\\": "tests"
+            "Telltale\\Tests\\": "tests"
         }
     }
 }
