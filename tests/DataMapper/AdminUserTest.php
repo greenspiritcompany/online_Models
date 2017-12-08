@@ -15,9 +15,6 @@ class AdminUserTest extends AbstractDBTest {
   private $AdminUser;
 
   public function __construct() {
-
-    putenv('AUTH_TOKEN_KEY=AdminUserTestAuthTokenKey');
-
     $this->setupTableSchema('admin_user', '
       `username` varchar(20) NOT NULL,
       `fullname` varchar(50) DEFAULT NULL,
@@ -47,6 +44,8 @@ class AdminUserTest extends AbstractDBTest {
   }
 
   protected function getDataSet() {
+    putenv('AUTH_TOKEN_KEY=AdminUserTestAuthTokenKey');
+
     return $this->createArrayDataSet([
       'admin_user' => [
         [
