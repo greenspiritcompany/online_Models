@@ -59,16 +59,17 @@ abstract class AbstractDBTest extends TestCase {
     }
 
     /**
-     * Setup the schema for a table
+     * Setup the schema for a table once per testCase
      *
      * @param string $table
      * @param string $schema
      * @return void
      */
     protected function setupTableSchema(string $table, string $schema) {
-      if (!in_array($table, self::$tables)) {
+      $testCase = get_class($this);
+      if (!(array_key_exists($testCase, self::$tables) && in_array($table, self::$tables[$testCase]))) {
         $this->getPDO()->exec("DROP TABLE IF EXISTS `{$table}`; CREATE TABLE `{$table}` ({$schema});");
-        self::$tables[] = $table;
+        self::$tables[$testCase][] = $table;
       }
     }
 
