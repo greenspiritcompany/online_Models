@@ -17,6 +17,7 @@
     "require": {
         "aws/aws-sdk-php": "@stable",
         "psr/cache": "@stable",
+        "psr/log": "@stable",
         "php": ">=7",
         "league/oauth2-client": "@stable"
     },
