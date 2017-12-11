@@ -28,8 +28,10 @@ abstract class AbstractDBTest extends TestCase {
     final public function getConnection() {
       if ($this->conn === null) {
         if (self::$pdo == null) {
-            self::$pdo = new \PDO(DBUNIT_DATABASE_MYSQL_DSN, DBUNIT_DATABASE_MYSQL_USERNAME, DBUNIT_DATABASE_MYSQL_PASSWORD);
-            self::$pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+          self::$pdo = new \PDO(DBUNIT_DATABASE_MYSQL_DSN, DBUNIT_DATABASE_MYSQL_USERNAME, DBUNIT_DATABASE_MYSQL_PASSWORD);
+          self::$pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+          self::$pdo->exec('CREATE DATABASE IF NOT EXISTS ' . DBUNIT_DATABASE_MYSQL_NAME);
+          self::$pdo->exec('use ' . DBUNIT_DATABASE_MYSQL_NAME);
         }
         $this->conn = $this->createDefaultDBConnection(self::$pdo, 'mysql');
       }
@@ -73,4 +75,10 @@ abstract class AbstractDBTest extends TestCase {
       }
     }
 
+    // public function __destruct() {
+    //   if (self::$pdo) {
+    //     self::$pdo->exec('DROP DATABASE IF EXISTS ' . DBUNIT_DATABASE_MYSQL_NAME);
+    //     self::$pdo = null;
+    //   }
+    // }
 }
