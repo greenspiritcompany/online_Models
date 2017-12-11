@@ -5,7 +5,7 @@ This repository contains data models and data mappers that populate the models. 
 
 ## Unit Tests Setup
 
-- Start a local MySQL server with a empty database named `phpunit_model_tests`
+- Start a local MySQL server.
 - Install dependencies with `composer update`
 
 Configuration is located in `phpunit.xml`
