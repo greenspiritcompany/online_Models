@@ -1,0 +1,190 @@
+<?xml version="1.0"?>
+<mysqldump xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<database name="phpunit_model_tests">
+	<table_data name="entitlement">
+	<row>
+		<field name="user_id">1336</field>
+		<field name="relation">seasonpass</field>
+		<field name="item">game_installer</field>
+		<field name="game">samandmax</field>
+		<field name="platform">telltale</field>
+		<field name="source">dataset</field>
+		<field name="source_id"></field>
+		<field name="created_at">2017-11-15 01:13:28</field>
+		<field name="updated_at" xsi:nil="true" />
+		<field name="enabled">1</field>
+		<field name="attributes">[]</field>
+	</row>
+	<row>
+		<field name="user_id">1337</field>
+		<field name="relation">associated</field>
+		<field name="item">game</field>
+		<field name="game">borderlands</field>
+		<field name="platform">mac</field>
+		<field name="source">game</field>
+		<field name="source_id">150289739</field>
+		<field name="created_at">2017-10-22 17:56:48</field>
+		<field name="updated_at" xsi:nil="true" />
+		<field name="enabled">1</field>
+		<field name="attributes" xsi:nil="true" />
+	</row>
+	<row>
+		<field name="user_id">1337</field>
+		<field name="relation">associated</field>
+		<field name="item">game</field>
+		<field name="game">borderlands</field>
+		<field name="platform">pc</field>
+		<field name="source">game</field>
+		<field name="source_id">150289740</field>
+		<field name="created_at">2017-10-21 17:56:48</field>
+		<field name="updated_at" xsi:nil="true" />
+		<field name="enabled">1</field>
+		<field name="attributes" xsi:nil="true" />
+	</row>
+	<row>
+		<field name="user_id">1337</field>
+		<field name="relation">disabled-test</field>
+		<field name="item">test</field>
+		<field name="game">tool</field>
+		<field name="platform">pc</field>
+		<field name="source">dataset</field>
+		<field name="source_id"></field>
+		<field name="created_at">2017-12-06 19:45:20</field>
+		<field name="updated_at" xsi:nil="true" />
+		<field name="enabled">0</field>
+		<field name="attributes" xsi:nil="true" />
+	</row>
+	<row>
+		<field name="user_id">1337</field>
+		<field name="relation">seasonpass</field>
+		<field name="item">game_installer</field>
+		<field name="game">backtothefuture</field>
+		<field name="platform">telltale</field>
+		<field name="source">ElectronicFulfillmentRequest</field>
+		<field name="source_id">10000367054970014</field>
+		<field name="created_at">2017-06-22 18:05:06</field>
+		<field name="updated_at" xsi:nil="true" />
+		<field name="enabled">1</field>
+		<field name="attributes">{&quot;orderID&quot;:10008743320014,&quot;userID&quot;:486320788915}</field>
+	</row>
+	<row>
+		<field name="user_id">1337</field>
+		<field name="relation">seasonpass</field>
+		<field name="item">game_installer</field>
+		<field name="game">samandmax</field>
+		<field name="platform">telltale</field>
+		<field name="source">dataset</field>
+		<field name="source_id"></field>
+		<field name="created_at">2017-11-15 01:13:28</field>
+		<field name="updated_at" xsi:nil="true" />
+		<field name="enabled">1</field>
+		<field name="attributes">[]</field>
+	</row>
+	<row>
+		<field name="user_id">1337</field>
+		<field name="relation">seasonpass</field>
+		<field name="item">game_installer</field>
+		<field name="game">samandmax2</field>
+		<field name="platform">telltale</field>
+		<field name="source">ttgshop_games</field>
+		<field name="source_id">157591</field>
+		<field name="created_at">2013-06-21 21:56:26</field>
+		<field name="updated_at">2013-06-21 21:56:26</field>
+		<field name="enabled">1</field>
+		<field name="attributes">{&quot;serial_id&quot;: [&quot;SM200-UXTK2-ZLVCU-8CAWX-KSB4A&quot;, &quot;SM201-SYWMX-FJEUM-UPGA2-5VGNJ&quot;]}</field>
+	</row>
+	</table_data>
+	<table_data name="entitlement_codes">
+	<row>
+		<field name="code">DEMO-LX97-RQXV-P7WT</field>
+		<field name="item_id">2</field>
+		<field name="issuer">testing</field>
+		<field name="used">0</field>
+		<field name="created_at">2017-11-20 22:27:32</field>
+		<field name="updated_at" xsi:nil="true" />
+	</row>
+	<row>
+		<field name="code">TEST-UNLIMITED</field>
+		<field name="item_id">2</field>
+		<field name="issuer">testing</field>
+		<field name="used">-1</field>
+		<field name="created_at">2017-11-16 19:16:41</field>
+		<field name="updated_at">2017-11-16 22:05:36</field>
+	</row>
+	<row>
+		<field name="code">TEST-UNUSED</field>
+		<field name="item_id">1</field>
+		<field name="issuer">testing</field>
+		<field name="used">0</field>
+		<field name="created_at">2017-11-16 19:16:41</field>
+		<field name="updated_at">2017-11-28 23:40:53</field>
+	</row>
+	<row>
+		<field name="code">TEST-UNUSED-OWNED</field>
+		<field name="item_id">4</field>
+		<field name="issuer">testing</field>
+		<field name="used">0</field>
+		<field name="created_at">2017-12-06 19:41:11</field>
+		<field name="updated_at" xsi:nil="true" />
+	</row>
+	<row>
+		<field name="code">TEST-USED</field>
+		<field name="item_id">1</field>
+		<field name="issuer">testing</field>
+		<field name="used">1</field>
+		<field name="created_at">2017-11-16 19:52:45</field>
+		<field name="updated_at" xsi:nil="true" />
+	</row>
+	<row>
+		<field name="code">TEXT-UNUSED-EXPIRED</field>
+		<field name="item_id">3</field>
+		<field name="issuer">foo</field>
+		<field name="used">0</field>
+		<field name="created_at">2017-12-06 19:08:35</field>
+		<field name="updated_at" xsi:nil="true" />
+	</row>
+	</table_data>
+	<table_data name="entitlement_items">
+	<row>
+		<field name="id">1</field>
+		<field name="item">game_installer</field>
+		<field name="relation">seasonpass</field>
+		<field name="game">guardians</field>
+		<field name="platform">telltale</field>
+		<field name="created_at">2017-04-06 19:44:28</field>
+		<field name="updated_at" xsi:nil="true" />
+		<field name="expires_at" xsi:nil="true" />
+	</row>
+	<row>
+		<field name="id">2</field>
+		<field name="item">game_installer</field>
+		<field name="relation">trial</field>
+		<field name="game">gameofthrones</field>
+		<field name="platform">pc</field>
+		<field name="created_at">2017-06-23 22:02:19</field>
+		<field name="updated_at" xsi:nil="true" />
+		<field name="expires_at" xsi:nil="true" />
+	</row>
+	<row>
+		<field name="id">3</field>
+		<field name="item">expired</field>
+		<field name="relation">test</field>
+		<field name="game">testing</field>
+		<field name="platform">telltale</field>
+		<field name="created_at">2015-12-06 19:07:48</field>
+		<field name="updated_at" xsi:nil="true" />
+		<field name="expires_at">2016-12-06 19:07:48</field>
+	</row>
+	<row>
+		<field name="id">4</field>
+		<field name="item">game_installer</field>
+		<field name="relation">seasonpass</field>
+		<field name="game">backtothefuture</field>
+		<field name="platform">telltale</field>
+		<field name="created_at">2017-12-06 19:40:44</field>
+		<field name="updated_at" xsi:nil="true" />
+		<field name="expires_at" xsi:nil="true" />
+	</row>
+	</table_data>
+</database>
+</mysqldump>
