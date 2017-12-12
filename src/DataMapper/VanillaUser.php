@@ -7,12 +7,13 @@ use PDOException;
 class VanillaUser {
 
   const FIELDS = '
-    userID,
+    UserID,
     AuthID,
     Name,
     Photo,
     About,
     Email,
+    DateOfBirth,
     InsertIPAddress,
     LastIPAddress,
     Banned,
@@ -156,5 +157,5 @@ class VanillaUser {
     $statement = $this->pdo->prepare("UPDATE GDN_User SET {$placeholders} WHERE userID = ?");
     return $statement->execute($queryHelper['values']);
   }
-  
+
 }
