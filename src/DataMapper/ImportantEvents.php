@@ -23,7 +23,7 @@ class ImportantEvents {
 
   /**
    * Fetch all the important events for a game
-   * Note: Database changes database based on game key
+   * Note: Database changes name based on game key
    *
    * @param string $game
    * @param array $list_of_valid_games
