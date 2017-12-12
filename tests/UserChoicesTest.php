@@ -234,7 +234,7 @@ class UserChoicesTest extends AbstractDBTest {
           'game_name' => self::GAME_NAME,
           'choice_doc_type' => self::CHOICE_DOC_TYPE,
           'source_doc_date' => '2017-12-11',
-          'json_data' => file_get_contents(dirname(__FILE__) . '/../../datasets/minecraft2-choice-data.json'),
+          'json_data' => file_get_contents(dirname(__FILE__) . '/../datasets/minecraft2-choice-data.json'),
         ],
         [
           'game_name' => 'mock-choice-game',

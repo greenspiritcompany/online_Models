@@ -56,7 +56,7 @@ class EntitlementTest extends AbstractDBTest {
     }
 
     protected function getDataSet() {
-      return $this->createMySQLXMLDataSet(dirname(__FILE__) . '/../../datasets/entitlement-data.xml');
+      return $this->createMySQLXMLDataSet(dirname(__FILE__) . '/../datasets/entitlement-data.xml');
     }
 
     public function testFindEnabledUserEntitlements() {

@@ -26,7 +26,7 @@ class ChoiceDocumentTest extends AbstractDBTest {
     }
 
     protected function getDataSet() {
-      return $this->createMySQLXMLDataSet(dirname(__FILE__) . '/../../datasets/choice_documents_with_data.xml');
+      return $this->createMySQLXMLDataSet(dirname(__FILE__) . '/../datasets/choice_documents_with_data.xml');
     }
 
     public function testFindChoices() {
