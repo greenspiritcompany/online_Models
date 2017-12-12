@@ -14,153 +14,132 @@ class User implements \JsonSerializable {
   const UNDER_AGE = 12;
   const USERNAME_REGEX = '/^[\w\-]{5,24}$/';
 
-  /** 
+  /**
    * The primary key attribute of the auth.users table `id`
    *
    * @var int User ID (id PK) from the auth.users table
    **/
   private $id;
 
-  /** 
+  /**
    * Deprecated primary key attribute of the store.ttgshop_customers table `id`
    * - Was used for linking to legacy customer store accounts
    * - No longer used and should not be set or updated
    * - Will be null for new accounts
-   * 
+   *
    * @var int|null Customer ID (id PK) from the store.ttgshop_customers table
    **/
   private $customer_id;
 
-  /** 
+  /**
    * The primary key attribute of the vanilla.GDN_User table `UserID`
    * - Used to link auth to a customer's Vanilla account
    * - Can be null for users who have not verified their account and joined the community
-   * 
+   *
    * @var int|null Forum ID (UserID PK) from the vanilla.GDN_User table
    **/
   private $forum_id;
 
-  /** 
+  /**
    * The `Name` attribute of the vanilla.GDN_User table
    * - Likely duplicated here to avoid having to query two databases all the time
-   * 
+   *
    * @var int|null Username (Name) from the vanilla.GDN_User table
    **/
   private $username;
 
-  /** 
+  /**
    * The user's email address
    * NOTE Not currently a required field in the auth.users table but should be
-   * 
+   *
    * @var string email
    **/
   private $email;
 
-  /** 
+  /**
    * The user's hashed password
    * NOTE Not currently a required field in the auth.users table but should be
-   * 
+   *
    * @var string password
    **/
   private $password;
 
-  /** 
+  /**
    * Deprecated static password salt
    * - Older accounts were given a random salt and used crypt()
    * - New or rehashed passwords will not store a salt
    * - If defined verifyPassword() will use crypt
-   * 
+   *
    * @var string|null pw_salt
    **/
   private $pw_salt;
 
-  /** 
+  /**
    * PasswordResetKey (change_pw in the database)
    * - Used to verify a password reset email is authentic
    * - Only set when a user requests a password reset
-   * 
+   *
    * @var string|null change_pw
    **/
   private $change_pw;
 
-  /** 
+  /**
    * The user's date of birth
    * Set when the user verifies their age
-   * 
+   *
    * @var datetime|null birthdate
    **/
   private $birthdate;
 
-  /** 
+  /**
    * EmailVerificationKey (email_salt in the database)
    * - Randomly generated key used to verify the user's email
    * - Always should be set when a new user is created but is not required in the database
-   * 
+   *
    * @var string|null email_salt
    **/
   private $email_salt;
 
-  /** 
+  /**
    * The datetime when this user verified their email using their email verification key
    * Can also be assumed as the date when a user agreed to the Terms of Service
-   * 
+   *
    * @var datetime|null email_verify
    **/
   private $email_verify;
 
-  /** 
+  /**
    * The datetime when this user record was created
-   * 
+   *
    * @var datetime created_at
    **/
   private $created_at;
 
-  /** 
+  /**
    * The datetime when this user record was last updated
-   * 
+   *
    * @var datetime|null updated_at
    **/
   private $updated_at;
 
-  /** 
+  /**
    * The LastLogin datetime when this user last authenticated
-   * 
+   *
    * @var datetime|null last_login_at
    **/
   private $last_login_at;
 
-  /** 
+  /**
    * Has this user record been disabled?
-   * 
+   *
    * @var bool disabled
    **/
   private $disabled;
 
-  /** 
-   * Associate this user to their Steam ID
-   * 
-   * @var string|null steam_id
-   **/
-  private $steam_id;
-
-  /** 
-   * Associate this user to their XUID
-   * 
-   * @var string|null xbox_live
-   **/
-  private $xbox_live;
-
- /** 
-   * Associate this user to their Playstation ID
-   * 
-   * @var string|null psn_id
-   **/
-  private $psn_id;
-
-   /** 
+   /**
    * Stores what fields have been set and now differ from their initial values
    * Used by queryUpdateHelper to help build PDO statements
-   * 
+   *
    * @var array updatedFields
    **/
   protected $updatedFields = [];
@@ -222,7 +201,7 @@ class User implements \JsonSerializable {
   public function setPassword(string $password): self {
     // Basic password strength check
     if ($this->validate && strlen($password) <= self::PASSWORD_MIN && strtolower($password) !== 'password') throw new Exception('Rejected password', 422);
-    
+
     // Hash Password
     $hashed = password_hash($password, self::PASSWORD_OPTIONS['algo'], self::PASSWORD_OPTIONS);
 
@@ -329,7 +308,7 @@ class User implements \JsonSerializable {
     return (bool)$this->disabled;
   }
 
-  public function setDisabled($disabled): self {    
+  public function setDisabled($disabled): self {
     $disabled = filter_var($disabled, FILTER_VALIDATE_BOOLEAN);
     if ($this->disabled !== $disabled) $this->updatedFields[] = 'disabled';
     // Cast bool to int for 1 or 0 in db
@@ -337,28 +316,28 @@ class User implements \JsonSerializable {
     return $this;
   }
 
-  /** 
+  /**
    * Has this user record mutated?
    * Useful to see if and update should be sent to the user DataMapper
-   * 
+   *
    * @return bool
    **/
   public function hasUpdates(): bool {
     return !empty($this->updatedFields);
   }
 
-  /** 
+  /**
    * Does this user record have the required fields to be considered 'verified'?
-   * 
+   *
    * @return bool
    **/
   public function isVerified(): bool {
     return !empty($this->email_verify);
   }
 
-  /** 
+  /**
    * Is this user of legal age?
-   * 
+   *
    * @return bool
    **/
   public function isLegal(): bool {
@@ -387,10 +366,10 @@ class User implements \JsonSerializable {
     return $diff->y <= self::UNDER_AGE;
   }
 
-   /** 
+   /**
    * Verify that a plaintext password matches the hashed version stored here
    * - Will rehash the password if needed
-   * 
+   *
    * @var string password
    * @return bool
    **/
@@ -419,9 +398,9 @@ class User implements \JsonSerializable {
     return $isValid;
   }
 
-  /** 
+  /**
    * Returns an array of all fields that have been set along with their values
-   * 
+   *
    * @return array
    **/
   public function queryHelper(): array {
@@ -442,9 +421,9 @@ class User implements \JsonSerializable {
     return ['keys' => $keys, 'values' => $values];
   }
 
-  /** 
+  /**
    * Returns an array of all fields that have been updated along with their values
-   * 
+   *
    * @return array
    **/
   public function queryUpdateHelper(): array {
@@ -463,11 +442,11 @@ class User implements \JsonSerializable {
   /**
    * User auth token
    * Used to authenticate a user's request without their email/password
-   * 
+   *
    * Format: userId,time,hash
    * userId: The user's id for this token
    * time: When the auth token was initially created. Will allow tokens older than a certain time to be invalidated if needed
-   * 
+   *
    * @return string
    **/
   public function authToken(string $time = ''): string {
@@ -477,9 +456,9 @@ class User implements \JsonSerializable {
     return $payload . ',' . hash_hmac('SHA256', $toHash, getenv('AUTH_TOKEN_KEY'));
   }
 
-  /** 
+  /**
    * Returns an array of jsonSerialize values safe to return to the user
-   * 
+   *
    * @return array
    **/
   public function jsonSerialize(): array {

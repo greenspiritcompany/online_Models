@@ -19,19 +19,23 @@ class GameInstaller implements \JsonSerializable {
     $this->download = $this->cdnRootPath . $this->filepath;
   }
 
-  public function getDownload() {
-    return $this->cdnRootPath . $this->filepath;
+  public function getDownload(): string {
+    return $this->download;
   }
 
-  public function getEnabled() {
-    return $this->enabled;
+  public function getEnabled(): bool {
+    return (bool)$this->enabled;
   }
 
-  public function getCdnRoot() {
+  public function getCdnRoot(): string {
     return $this->cdnRootPath;
   }
 
-  public function setCdnRoot(string $cdnRootPath) {
+  public function getFilePath(): string {
+    return $this->filepath;
+  }
+
+  public function setCdnRoot(string $cdnRootPath): self {
     $this->cdnRootPath = $cdnRootPath;
     $this->download = $cdnRootPath . $this->filepath;
     return $this;
@@ -41,7 +45,7 @@ class GameInstaller implements \JsonSerializable {
     $this->download = $method($this->cdnRootPath . $this->filepath);
   }
 
-  public function jsonSerialize() {
+  public function jsonSerialize(): array {
     return [
       'game' => $this->game,
       'platform' => $this->platform,

@@ -4,7 +4,6 @@ namespace Telltale\DataMapper;
 use Psr\Log\NullLogger;
 
 use Telltale\DataMapper\ImportantEvents;
-use Telltale\DataMapper\Game;
 use Telltale\DataMapper\ServicesAccount;
 use Telltale\DataMapper\ChoiceDocument;
 use Telltale\DataMapper\AWSKinesis;
@@ -25,12 +24,12 @@ class UserChoices {
   const CHOICE_DOC_EXCLUDE = ['count', 'options', 'expression', 'nodeidintval', 'nodeidfullintval'];
 
   private $importantEvents;
-  private $gameData;
   private $servicesAccount;
   private $cache;
   private $servicesCache;
   private $choiceDocument;
   private $kinesis;
+  private $dynamoDB;
   private $log;
 
   /**
@@ -47,7 +46,6 @@ class UserChoices {
     $this->log = $logger ?? new NullLogger();
 
     $this->importantEvents = new ImportantEvents($globalPDO, $cache);
-    $this->gameData = new Game($globalPDO, $cache);
 
     $this->servicesAccount = new ServicesAccount($servicesPDO, $cache);
     $this->cache = $cache;
@@ -149,7 +147,7 @@ class UserChoices {
 
     // If we don't have any matches yet, return a pending message
     if (empty($userChoiceData)) {
-      return $this->statusResponse($userChoiceData['status'] ?: "pending", "Waiting for player data...", $docType);
+      return $this->statusResponse("pending", "Waiting for player data...", $docType);
     }
 
     // Determine what the current live episode is for this game

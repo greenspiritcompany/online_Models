@@ -97,7 +97,7 @@ class AdminUser {
     // Save user into cache
     $cacheItem->set($user);
     $this->cache->save($cacheItem);
-    return $cacheItem;
+    return $user;
   }
 
   /**

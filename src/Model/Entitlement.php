@@ -70,9 +70,9 @@ class Entitlement implements \JsonSerializable {
     */
   private $source_id;
 
-    /** 
+    /**
     * The datetime when the entitlement record was created
-    * 
+    *
     * @var datetime created_at
     */
   private $created_at;
@@ -135,7 +135,7 @@ class Entitlement implements \JsonSerializable {
   public function __construct() {
     // Decode attributes when set by PDO
     if ($this->attributes) {
-      $this->attributes = json_decode($this->attributes);
+      $this->attributes = json_decode($this->attributes, true);
     }
   }
 
@@ -206,7 +206,7 @@ class Entitlement implements \JsonSerializable {
     return $this->created_at;
   }
 
-  public function getEnabled() {
+  public function getEnabled(): bool {
     return (bool)$this->enabled;
   }
 
@@ -217,7 +217,7 @@ class Entitlement implements \JsonSerializable {
     return $this;
   }
 
-  public function getUsed() {
+  public function getUsed(): bool {
     return (bool)$this->used;
   }
 
@@ -226,7 +226,7 @@ class Entitlement implements \JsonSerializable {
     return $this;
   }
 
-  public function getAttributes() {
+  public function getAttributes(): array {
     return $this->attributes ?? [];
   }
 

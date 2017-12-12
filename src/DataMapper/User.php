@@ -22,8 +22,6 @@ class User {
     email_verify,
     created_at,
     updated_at,
-    created_user_id,
-    updated_user_id,
     last_login_at,
     disabled
   ';
@@ -138,7 +136,7 @@ class User {
     );
 
     // Email & Password can be null in the auth users table so we must check here
-    // @TODO: Update users schema so these fields cannot be null 
+    // @TODO: Update users schema so these fields cannot be null
     $email = $user->getEmail();
     $password = $user->getPassword();
     if (!($email && $password)) {
@@ -234,7 +232,7 @@ class User {
     if (!hash_equals($token,$expectedToken)) {
       throw new \Exception('Token Validation Failed', 401);
     }
-    
+
     return $user;
   }
 
