@@ -325,8 +325,8 @@ class UserChoices {
             $option,
             [
               'question' => $choice['description'],
-              'description' => $this->putPercentageInDescription($option['description'], $option['percent']),
-              'description2' => !empty($option['description2']) ? $this->putPercentageInDescription($option['description2'], $option['percent']) : null,
+              'description' => str_replace('{percent}', $option['percent'], $option['description']),
+              'description2' => !empty($option['description2']) ? str_replace('{percent}', $option['percent'], $option['description2']) : null,
             ],
             $choiceDocExclude
           );
@@ -372,53 +372,53 @@ class UserChoices {
   /**
    * To detect if the expression we are looking is a compound query (multiple dialog nodes)
    *
-   * @param string $expression_string
-   * @param array $player_events
-   * @param array $symbol_dictionary
+   * @param string $expressionString
+   * @param array $playerEvents
+   * @param array $symbolDictionary
    * @return bool
    */
-  private function evalExpressionString(string $expression_string, array $player_events, array $symbol_dictionary): bool {
+  private function evalExpressionString(string $expressionString, array $playerEvents, array $symbolDictionary): bool {
 
-    $expressions = explode(" ", $expression_string);
+    $expressions = array_filter(explode(" ", $expressionString));
 
     if (empty($expressions)) {
       $this->log->warning('evalExpressionString has no expressions');
       return false;
     }
 
-    $translated_evaluation_string = "";
+    $allowedOperators = ['(',')','|','&'];
+
+    $evaluationString = '';
     foreach ($expressions as $expression) {
-      if (strpos($expression,'(') !== false | strpos($expression,')') !== false | strpos($expression,'|') !== false | strpos($expression,'&') !== false) {
-        $translated_evaluation_string = $translated_evaluation_string . $expression . " ";
+
+      // If this expression is one of our allowed operators append it into the evaluation string.
+      if (in_array($expression, $allowedOperators)) {
+        $evaluationString .= $expression . ' ';
+        continue;
       }
-      if ($this->startsWith($expression,'{')) {
-        if ($this->doesThisEventExistInPlayersEvents($expression, $player_events, $symbol_dictionary)) {
-            $translated_evaluation_string = $translated_evaluation_string . 'true' . " ";
-        } else {
-            $translated_evaluation_string = $translated_evaluation_string . 'false' . " ";
-        }
+
+      $match = array_key_exists($expression, $symbolDictionary) && in_array($symbolDictionary[$expression], $playerEvents);
+
+      // If expression starts with ~ it should not exist in $playerEvents
+      if (strncmp($expression, "~", 1) === 0) {
+        $match = !$match;
       }
-      if ($this->startsWith($expression,'~{')) {
-        if (!$this->doesThisEventExistInPlayersEvents($expression, $player_events, $symbol_dictionary)) {
-            $translated_evaluation_string = $translated_evaluation_string . 'true' . " ";
-        } else {
-            $translated_evaluation_string = $translated_evaluation_string . 'false' . " ";
-        }
-      }
+
+      $evaluationString .= ($match ? 'true ' : 'false ');
     }
 
-    if (empty($translated_evaluation_string)) {
+    if (empty($evaluationString)) {
       $this->log->warning('Failed to make a translated evaluation string.');
       return false;
     }
 
     $result = 0;
     try {
-      eval(sprintf('$result = %s;', $translated_evaluation_string));
+      eval(sprintf('$result = %s;', $evaluationString));
     } catch (\ParseError $e) {
       $this->log->error('Failed to eval translated string.', [
         'Exception' => $e->getMessage(),
-        'translated_evaluation_string' => $translated_evaluation_string,
+        'evaluationString' => $evaluationString,
       ]);
     }
 
@@ -426,58 +426,7 @@ class UserChoices {
   }
 
   /**
-   * To detect if the expression we are looking is a compound query (multiple dialog nodes)
-   *
-   * @param string $dlg_node
-   * @param array $player_events
-   * @param array $symbol_dictionary
-   * @return bool
-   */
-  private function doesThisEventExistInPlayersEvents(string $dlg_node, array $player_events, array $symbol_dictionary): bool {
-    $translated_value = null;
-    if (isset($symbol_dictionary[$dlg_node])) {
-      $translated_value = $symbol_dictionary[$dlg_node];
-      foreach ($player_events as $event) {
-        if ($event == $translated_value) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Insert a percentage value into a choice description string
-   *
-   * @param array $description_array
-   * @param string $percentage
-   * @return array
-   */
-  private function putPercentageInDescription(array $description_array, string $percentage): array {
-    $result_array = [];
-
-    foreach ($description_array as $language => $text) {
-      $percentage_string = str_replace('{percent}', $percentage, $text);
-      $result_array[$language] = $percentage_string;
-    }
-
-    return $result_array;
-  }
-
-  /**
-   * See if a given string begins with something.
-   *
-   * @param string $haystack
-   * @param string $needle
-   * @return bool
-   */
-  private function startsWith(string $haystack, string $needle): bool {
-    $length = strlen($needle);
-    return (substr($haystack, 0, $length) === $needle);
-  }
-
-  /**
-   * Undocumented function
+   * Return meta response when no choices were found for a player
    *
    * @return array
    */
@@ -486,7 +435,7 @@ class UserChoices {
   }
 
   /**
-   * Undocumented function
+   * Return meta status response
    *
    * @param string $status
    * @param string $message
