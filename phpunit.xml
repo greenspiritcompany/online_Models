@@ -12,7 +12,7 @@
 
     <php>
         <const name="DBUNIT_DATABASE_MYSQL_NAME" value="phpunit_model_tests"/>
-        <const name="DBUNIT_DATABASE_MYSQL_DSN" value="mysql:host=127.0.0.1;port=8889"/>
+        <const name="DBUNIT_DATABASE_MYSQL_DSN" value="mysql:host=mysql"/>
         <const name="DBUNIT_DATABASE_MYSQL_USERNAME" value="root"/>
         <const name="DBUNIT_DATABASE_MYSQL_PASSWORD" value="root"/>
     </php>
