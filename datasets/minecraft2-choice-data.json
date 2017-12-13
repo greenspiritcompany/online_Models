@@ -90,13 +90,13 @@
       "updatedate": "",
       "options": [
         {
-          "expression": "( {3B4B1589-289D-4D54-A524-F19003F0F413} )",
+          "expression": "( ( {45309799-072B-47AA-AAFF-E4F14070AD96} | {7BE56C1E-54F4-4CFE-B7D6-5DEF210D0B15} ) & ( {437A695A-A667-4162-A47A-0FAD77D2D265} | {A3085ED2-03FF-4E01-98BE-57C61775089F} ) )",
           "nodeidintval": "{149381096360532022}",
           "nodeidfullintval": "{11493810963605320227}",
           "image": "",
           "description": {
             "arabic": ".\ufee2\ufeeb\ufeee\ufee4\ufe98\ufef3\ufeaa\ufea4\ufe97 \ufee6\ufef4\ufe92\ufecb\ufefb\ufedf\u0627 \ufee6\ufee3 %{percent}\ufeed \ufe96\ufee7\ufe83",
-            "english": "You and {percent}% of players challenged them.",
+            "english": "Test Eval - You and {percent}% of players challenged them.",
             "french": "Vous et {percent} % des joueurs les avez d\u00e9fi\u00e9s.",
             "german": "Du und {percent} % der Spieler haben sie herausgefordert.",
             "spanish": "El {percent}% de los jugadores y t\u00fa los retaron.",
@@ -111,13 +111,13 @@
           "count": 16665
         },
         {
-          "expression": "( {F808C169-D919-43F9-9A15-7F1C34EDC2BA} )",
+          "expression": "( ( {23EC7B89-1DA8-457D-B190-766A89E0C080} & {A8F07485-6132-47CD-8204-3CE12C85BFD1} & {4495299C-3C7A-458D-981B-786A6E00FD50} ) | ( {FFFE79F9-4B41-46F0-94DE-784A221D917F} & ~{8BC9A6BD-4EC6-4EB6-BAA6-75B37917B58C} ) )",
           "nodeidintval": "{62900090687555051}",
           "nodeidfullintval": "{5629000906875550518}",
           "image": "",
           "description": {
             "arabic": ".\ufe96\ufee4\ufebc\ufedf\ufe8e\ufe91 \ufee6\ufef4\ufe92\ufecb\ufefb\ufedf\u0627 \ufee6\ufee3 %{percent}\ufeed \ufe96\ufee7\ufe83 \ufe96\ufee4\ufed7",
-            "english": "You and {percent}% of players stayed silent.",
+            "english": "Test Eval - You and {percent}% of players stayed silent.",
             "french": "Vous et {percent} % des joueurs n'avez rien dit.",
             "german": "Du und {percent} % der Spieler schwiegen einfach.",
             "spanish": "El {percent}% de los jugadores y t\u00fa no dijeron nada.",
