@@ -370,7 +370,7 @@ class UserChoices {
   }
 
   /**
-   * To detect if the expression we are looking is a compound query (multiple dialog nodes)
+   * Evaluates an expression string against the player's events using the symbol dictionary
    *
    * @param string $expressionString
    * @param array $playerEvents
@@ -386,17 +386,20 @@ class UserChoices {
       return false;
     }
 
+    // The expression string can contain these operators
     $allowedOperators = ['(',')','|','&'];
 
-    $evaluationString = '';
+    // Convert the expression into a condition that can be evaluated against player events
+    $conditional = '(bool) ';
     foreach ($expressions as $expression) {
 
-      // If this expression is one of our allowed operators append it into the evaluation string.
+      // If this expression is one of our allowed operators append it into the conditional string.
       if (in_array($expression, $allowedOperators)) {
-        $evaluationString .= $expression . ' ';
+        $conditional .= $expression;
         continue;
       }
 
+      // Check if the expression (event value or dialogue node id) is in the symbol dictionary and translated value is in $playerEvents
       $match = array_key_exists($expression, $symbolDictionary) && in_array($symbolDictionary[$expression], $playerEvents);
 
       // If expression starts with ~ it should not exist in $playerEvents
@@ -404,25 +407,20 @@ class UserChoices {
         $match = !$match;
       }
 
-      $evaluationString .= ($match ? 'true ' : 'false ');
+      $conditional .= (int)$match;
     }
 
-    if (empty($evaluationString)) {
-      $this->log->warning('Failed to make a translated evaluation string.');
-      return false;
-    }
-
-    $result = 0;
     try {
-      eval(sprintf('$result = %s;', $evaluationString));
+      // eval should be safe here as $conditional will only contain allowed operators and boolean result of $match
+      return eval(sprintf('return %s;', $conditional));
     } catch (\ParseError $e) {
-      $this->log->error('Failed to eval translated string.', [
+      $this->log->error('Failed to evaluate expression.', [
         'Exception' => $e->getMessage(),
-        'evaluationString' => $evaluationString,
+        'conditional' => $conditional,
       ]);
     }
 
-    return ($result == 1);
+    return false;
   }
 
   /**
