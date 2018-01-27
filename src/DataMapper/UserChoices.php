@@ -97,7 +97,7 @@ class UserChoices {
     $choiceDocs = $this->choiceDocument->find($choiceDocQuery);
 
     if (!$choiceDocs) {
-      $this->log->error('No Choice Documents were found.', ['game' => $game, 'type' => $docType]);
+      $this->log->warning('No Choice Documents were found.', ['game' => $game, 'type' => $docType]);
       return $this->statusFailResponse('choice_doc');
     }
 
@@ -105,7 +105,7 @@ class UserChoices {
     $servicesAccountId = $this->servicesAccount->getIdFromAuthId($userID);
 
     if (!$servicesAccountId) {
-      $this->log->warning('User has no services account.', ['userID' => $userID, 'game' => $game]);
+      $this->log->debug('User has no services account.', ['userID' => $userID, 'game' => $game]);
       return $this->statusFailResponse($docType);
     }
 
@@ -146,7 +146,7 @@ class UserChoices {
     $playerEventList = $this->getPlayerEventList($userChoiceData);
 
     // If we don't have any matches yet, return a pending message
-    if (empty($userChoiceData)) {
+    if (empty($playerEventList)) {
       return $this->statusResponse("pending", "Waiting for player data...", $docType);
     }
 
@@ -156,7 +156,7 @@ class UserChoices {
     $importantEventsSymbolDictionary = $this->importantEvents->fetchSymbolDictionary($game);
 
     if (empty($importantEventsSymbolDictionary)) {
-      $this->log->error('No important events were found.', ['game' => $game]);
+      $this->log->warning('No important events were found.', ['game' => $game]);
       return $this->statusFailResponse($docType);
     }
 
