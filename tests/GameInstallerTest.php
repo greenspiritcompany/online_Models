@@ -10,6 +10,7 @@ class GameInstallerTest extends AbstractDBTest {
   private $gameInstaller;
 
   public function __construct() {
+    parent::__construct();
 
     $this->setupTableSchema('game_installer', "
       `game` varchar(34) NOT NULL DEFAULT '',

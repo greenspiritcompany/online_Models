@@ -9,6 +9,7 @@ class EntitlementItemTest extends AbstractDBTest {
   private $entitlementItem;
 
   public function __construct() {
+    parent::__construct();
 
     $this->setupTableSchema('entitlement_items', "
       `id` int(11) unsigned NOT NULL,

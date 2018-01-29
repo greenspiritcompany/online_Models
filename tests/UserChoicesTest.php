@@ -18,6 +18,7 @@ class UserChoicesTest extends AbstractDBTest {
   private $userChoices;
 
   public function __construct() {
+    parent::__construct();
 
     $this->setupTableSchema('account', "
       `id` int(11) NOT NULL AUTO_INCREMENT,

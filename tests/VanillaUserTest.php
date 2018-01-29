@@ -51,6 +51,7 @@ class VanillaUserTest extends AbstractDBTest {
   ];
 
   public function __construct() {
+    parent::__construct();
 
     $this->setupTableSchema('GDN_User', "
       `UserID` int(11) NOT NULL AUTO_INCREMENT,

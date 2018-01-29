@@ -14,6 +14,7 @@ class GameTest extends AbstractDBTest {
   private $game;
 
   public function __construct() {
+    parent::__construct();
 
     $this->setupTableSchema('games', "
       `id` smallint(6) NOT NULL,

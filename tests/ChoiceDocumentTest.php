@@ -9,6 +9,7 @@ class ChoiceDocumentTest extends AbstractDBTest {
   private $choiceDocument;
 
     public function __construct() {
+      parent::__construct();
 
       $this->setupTableSchema('choice_documents_with_data', '
         `id` int(11) unsigned NOT NULL AUTO_INCREMENT,

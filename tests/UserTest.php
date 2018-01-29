@@ -66,6 +66,8 @@ class UserTest extends AbstractDBTest {
   private $user;
 
   public function __construct() {
+    parent::__construct();
+
     $this->setupTableSchema('users', "
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `customer_id` int(11) NOT NULL DEFAULT '0',

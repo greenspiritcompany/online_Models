@@ -15,6 +15,8 @@ class AdminUserTest extends AbstractDBTest {
   private $AdminUser;
 
   public function __construct() {
+    parent::__construct();
+
     $this->setupTableSchema('admin_user', '
       `username` varchar(20) NOT NULL,
       `fullname` varchar(50) DEFAULT NULL,

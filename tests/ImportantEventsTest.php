@@ -77,6 +77,7 @@ class ImportantEventsTest extends AbstractDBTest {
   private $importantEvents;
 
   public function __construct() {
+    parent::__construct();
 
     $this->setupTableSchema('important_events', "
       `id` int(11) unsigned NOT NULL AUTO_INCREMENT,

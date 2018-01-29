@@ -10,6 +10,7 @@ class AssociationTest extends AbstractDBTest {
   private $association;
 
   public function __construct() {
+    parent::__construct();
 
     $this->setupTableSchema('association', '
       `user_id` int(11) NOT NULL,

@@ -11,6 +11,7 @@ class EntitlementTest extends AbstractDBTest {
   private $entitlement;
 
     public function __construct() {
+      parent::__construct();
 
       $this->setupTableSchema('entitlement', "
         `user_id` int(11) NOT NULL,
