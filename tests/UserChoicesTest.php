@@ -314,8 +314,8 @@ class UserChoicesTest extends AbstractDBTest {
     $this->assertArrayHasKey('meta', $result);
 
     $this->assertEquals([
-      'status' => 'failed',
-      'message' => 'No events were found for this player.',
+      'status' => 'pending',
+      'message' => 'Waiting for player data...',
       'type' => 'stats_extended',
     ], $result['meta']);
   }
