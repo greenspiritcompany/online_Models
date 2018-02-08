@@ -449,6 +449,28 @@ class UserTest extends AbstractDBTest {
     $this->assertFalse($result); // should never run
   }
 
+  public function testUpdateModelWithID() {
+
+    // Unlike the above test if a new user model has a user id, the user will be updated
+    $userToUpdate = new UserModel();
+    $userToUpdate->setId(self::USERS_DATASET[0]['id']);
+
+    $originalUser = $this->user->find($userToUpdate);
+
+    $userToUpdate->setUsername(self::USERS_DATASET[0]['username']);
+
+    // Clone is needed here to keep $userToUpdate un-mutated from the update
+    $result = $this->user->update(clone $userToUpdate);
+    $this->assertTrue($result);
+
+    // Even though username was not changed, updated_at will have been modified.
+    $updatedUser = $this->user->find($userToUpdate);
+
+    $this->assertInstanceOf(UserModel::class, $originalUser);
+    $this->assertInstanceOf(UserModel::class, $updatedUser);
+    $this->assertNotEquals($originalUser, $updatedUser);
+  }
+
   public function testFromToken() {
     $token = "3,1512764133,40fda370b0e92acc2748b13f2f2dff4a31616c14a740a3a978c950c662da6725";
 
