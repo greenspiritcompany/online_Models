@@ -1,56 +1,56 @@
 <?php
 namespace Telltale\Model;
 
-class ImportantEvents implements \JsonSerializable {
+class ImportantEvents extends Model {
 
   /**
    * The "purpose" whose action created this record
    *
    * @var string
    **/
-  private $purpose;
+  protected $purpose;
 
   /**
    * The "event_type" identifies type of system that created this record.
    *
    * @var string
   **/
-  private $event_type;
+  protected $event_type;
 
   /**
    * The "int_event_type" performed. Human readable string describing the change.
    *
    * @var string
   **/
-  private $int_event_type;
+  protected $int_event_type;
 
   /**
    * The "event_value" performed. Human readable string describing the change.
    *
    * @var string
   **/
-  private $event_value;
+  protected $event_value;
 
   /**
    * The "b64_event_value" performed. Human readable string describing the change.
    *
    * @var string
   **/
-  private $b64_event_value;
+  protected $b64_event_value;
 
   /**
    * The "cohort_name" performed. Human readable string describing the change.
    *
    * @var string
   **/
-  private $cohort_name;
+  protected $cohort_name;
 
   /**
    * When this record was created
    *
    * @var datetime|null
   **/
-  private $created_at;
+  protected $created_at;
 
 
   public function getPurpose() {
@@ -114,29 +114,6 @@ class ImportantEvents implements \JsonSerializable {
 
   public function getCreatedAt() {
     return $this->created_at;
-  }
-
-  /**
-   * Returns an array of all fields that have been set along with their values
-   *
-   * @return array
-   **/
-  public function queryHelper(): array {
-    $reflection = new \ReflectionClass($this);
-    $properties = $reflection->getProperties(\ReflectionProperty::IS_PRIVATE);
-
-    $keys = [];
-    $values = [];
-
-    foreach ($properties as $property) {
-        $name = $property->getName();
-        if (isset($this->{$name})) {
-            $keys[] = $name;
-            $values[] = $this->{$name};
-        }
-    }
-
-    return ['keys' => $keys, 'values' => $values];
   }
 
   /**

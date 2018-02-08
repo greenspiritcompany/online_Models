@@ -6,42 +6,42 @@ namespace Telltale\Model;
  * Contains the master game 'key' or 'slug' the full 'display name' if the game is enabled/active and if CloudSync is enabled for it.
  *
  */
-class Game implements \JsonSerializable {
+class Game extends Model {
 
   /**
    * Primary key of the game row
    *
    * @var int -
    **/
-  private $id;
+  protected $id;
 
   /**
    * The game key. Known as the project name in the Tool
    *
    * @var string.
   **/
-  private $game;
+  protected $game;
 
   /**
    * Full display name
    *
    * @var string
   **/
-  private $display_name;
+  protected $display_name;
 
   /**
    * Is the game active / enabled / available
    *
    * @var bool
   **/
-  private $active;
+  protected $active;
 
   /**
    * Is CloudSync enabled for this game
    *
    * @var bool
   **/
-  private $cloudsync;
+  protected $cloudsync;
 
 
   public function getId(): int {
@@ -94,29 +94,6 @@ class Game implements \JsonSerializable {
   }
 
   /**
-   * Returns an array of all fields that have been set along with their values
-   *
-   * @return array
-   **/
-  public function queryHelper(): array {
-    $reflection = new \ReflectionClass($this);
-    $properties = $reflection->getProperties(\ReflectionProperty::IS_PRIVATE);
-
-    $keys = [];
-    $values = [];
-
-    foreach ($properties as $property) {
-        $name = $property->getName();
-        if (isset($this->{$name})) {
-            $keys[] = $name;
-            $values[] = $this->{$name};
-        }
-    }
-
-    return ['keys' => $keys, 'values' => $values];
-  }
-
-    /**
    * Returns an array of jsonSerialize values safe to display to the public
    *
    * @return array

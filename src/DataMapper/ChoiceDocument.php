@@ -9,14 +9,10 @@ use Psr\Cache\CacheItemPoolInterface;
 
 class ChoiceDocument {
 
-  const CACHE_TIME = 'PT2H'; // 2 hours
-
   private $pdo;
-  private $cache;
 
   public function __construct(PDO $pdo, CacheItemPoolInterface $cachePool = null) {
     $this->pdo = $pdo;
-    $this->cache = $cachePool;
   }
 
   /**
@@ -30,16 +26,6 @@ class ChoiceDocument {
     $queryHelper = $choiceDocument->queryHelper();
     if (!$queryHelper['keys']) {
       return false;
-    }
-
-    if ($this->cache) {
-      $cacheItem = $this->cache->getItem('ChoiceDocument|' . $queryHelper['key']);
-
-      // Return choiceDocument from cache if found
-      $result = $cacheItem->get();
-      if ($result) {
-        return $result;
-      }
     }
 
     $sourceDocDate = $choiceDocument->getSourceDocDate();
@@ -76,16 +62,6 @@ class ChoiceDocument {
     $statement->setFetchMode(PDO::FETCH_CLASS, ChoiceDocumentModel::class);
     $statement->execute($queryHelper['values']);
     $result = $statement->fetch();
-
-    if ($this->cache) {
-      // Cache the result
-      $exp = new \DateInterval(self::CACHE_TIME);
-      $cacheItem->expiresAfter($exp);
-
-      // Save result into cache
-      $cacheItem->set($result);
-      $this->cache->save($cacheItem);
-    }
 
     return $result;
   }

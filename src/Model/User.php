@@ -3,7 +3,7 @@ namespace Telltale\Model;
 use DateTime;
 use Exception;
 
-class User implements \JsonSerializable {
+class User extends Model {
 
   const PASSWORD_OPTIONS = [
     'cost' => 10,
@@ -19,7 +19,7 @@ class User implements \JsonSerializable {
    *
    * @var int User ID (id PK) from the auth.users table
    **/
-  private $id;
+  protected $id;
 
   /**
    * Deprecated primary key attribute of the store.ttgshop_customers table `id`
@@ -29,7 +29,7 @@ class User implements \JsonSerializable {
    *
    * @var int|null Customer ID (id PK) from the store.ttgshop_customers table
    **/
-  private $customer_id;
+  protected $customer_id;
 
   /**
    * The primary key attribute of the vanilla.GDN_User table `UserID`
@@ -38,7 +38,7 @@ class User implements \JsonSerializable {
    *
    * @var int|null Forum ID (UserID PK) from the vanilla.GDN_User table
    **/
-  private $forum_id;
+  protected $forum_id;
 
   /**
    * The `Name` attribute of the vanilla.GDN_User table
@@ -46,7 +46,7 @@ class User implements \JsonSerializable {
    *
    * @var int|null Username (Name) from the vanilla.GDN_User table
    **/
-  private $username;
+  protected $username;
 
   /**
    * The user's email address
@@ -54,7 +54,7 @@ class User implements \JsonSerializable {
    *
    * @var string email
    **/
-  private $email;
+  protected $email;
 
   /**
    * The user's hashed password
@@ -62,7 +62,7 @@ class User implements \JsonSerializable {
    *
    * @var string password
    **/
-  private $password;
+  protected $password;
 
   /**
    * Deprecated static password salt
@@ -72,7 +72,7 @@ class User implements \JsonSerializable {
    *
    * @var string|null pw_salt
    **/
-  private $pw_salt;
+  protected $pw_salt;
 
   /**
    * PasswordResetKey (change_pw in the database)
@@ -81,7 +81,7 @@ class User implements \JsonSerializable {
    *
    * @var string|null change_pw
    **/
-  private $change_pw;
+  protected $change_pw;
 
   /**
    * The user's date of birth
@@ -89,7 +89,7 @@ class User implements \JsonSerializable {
    *
    * @var datetime|null birthdate
    **/
-  private $birthdate;
+  protected $birthdate;
 
   /**
    * EmailVerificationKey (email_salt in the database)
@@ -98,7 +98,7 @@ class User implements \JsonSerializable {
    *
    * @var string|null email_salt
    **/
-  private $email_salt;
+  protected $email_salt;
 
   /**
    * The datetime when this user verified their email using their email verification key
@@ -106,43 +106,35 @@ class User implements \JsonSerializable {
    *
    * @var datetime|null email_verify
    **/
-  private $email_verify;
+  protected $email_verify;
 
   /**
    * The datetime when this user record was created
    *
    * @var datetime created_at
    **/
-  private $created_at;
+  protected $created_at;
 
   /**
    * The datetime when this user record was last updated
    *
    * @var datetime|null updated_at
    **/
-  private $updated_at;
+  protected $updated_at;
 
   /**
    * The LastLogin datetime when this user last authenticated
    *
    * @var datetime|null last_login_at
    **/
-  private $last_login_at;
+  protected $last_login_at;
 
   /**
    * Has this user record been disabled?
    *
    * @var bool disabled
    **/
-  private $disabled;
-
-   /**
-   * Stores what fields have been set and now differ from their initial values
-   * Used by queryUpdateHelper to help build PDO statements
-   *
-   * @var array updatedFields
-   **/
-  protected $updatedFields = [];
+  protected $disabled;
 
   // Allow validation to be disabled for legacy records
   public $validate = true;
@@ -167,8 +159,7 @@ class User implements \JsonSerializable {
 
   public function setForumId(int $forumId): self {
     if ($this->forum_id) throw new Exception('Forum ID should not be changed', 409);
-    $this->updatedFields[] = 'forum_id';
-    $this->forum_id = $forumId;
+    $this->updateField('forum_id', $forumId);
     return $this;
   }
 
@@ -178,8 +169,7 @@ class User implements \JsonSerializable {
 
   public function setUsername(string $username): self {
     if ($this->validate && 0 == preg_match(self::USERNAME_REGEX, $username)) throw new Exception('Invalid Username', 422);
-    if ($this->username !== $username) $this->updatedFields[] = 'username';
-    $this->username = $username;
+    $this->updateField('username', $username);
     return $this;
   }
 
@@ -189,8 +179,7 @@ class User implements \JsonSerializable {
 
   public function setEmail(string $email): self {
     if ($this->validate && !filter_var($email, FILTER_VALIDATE_EMAIL)) throw new Exception('Invalid Email', 422);
-    if ($this->email !== $email) $this->updatedFields[] = 'email';
-    $this->email = $email;
+    $this->updateField('email', $email);
     return $this;
   }
 
@@ -205,11 +194,12 @@ class User implements \JsonSerializable {
     // Hash Password
     $hashed = password_hash($password, self::PASSWORD_OPTIONS['algo'], self::PASSWORD_OPTIONS);
 
-    // Has password changed?
-    if ($this->password !== $hashed) $this->updatedFields[] = 'password';
+    // Remove legacy salt if exists
+    if (!empty($this->pw_salt)) {
+      $this->updateField('pw_salt', '');
+    }
 
-    // Finally set password
-    $this->password = $hashed;
+    $this->updateField('password', $hashed);
     return $this;
   }
 
@@ -219,9 +209,7 @@ class User implements \JsonSerializable {
 
   public function setPasswordSalt(string $salt): self {
     $salt = substr($salt,0,30); // Limit to MySQL schema length. @TODO: Increase length.
-
-    if ($this->pw_salt !== $salt) $this->updatedFields[] = 'pw_salt';
-    $this->pw_salt = $salt;
+    $this->updateField('pw_salt', $salt);
     return $this;
   }
 
@@ -231,9 +219,7 @@ class User implements \JsonSerializable {
 
   public function setPasswordResetKey(string $key): self {
     $key = substr($key,0,22); // Limit to MySQL schema length. @TODO: Increase length.
-
-    if ($this->change_pw !== $key) $this->updatedFields[] = 'change_pw';
-    $this->change_pw = $key;
+    $this->updateField('change_pw', $key);
     return $this;
   }
 
@@ -244,8 +230,7 @@ class User implements \JsonSerializable {
   public function setBirthdate(string $date): self {
     $date = new DateTime($date);
     $date = $date->format('Y-m-d H:i:s');
-    if ($this->birthdate !== $date) $this->updatedFields[] = 'birthdate';
-    $this->birthdate = $date;
+    $this->updateField('birthdate', $date);
     return $this;
   }
 
@@ -255,9 +240,7 @@ class User implements \JsonSerializable {
 
   public function setEmailVerificationKey(string $key): self {
     $key = substr($key,0,22); // Limit to MySQL schema length. @TODO: Increase length.
-
-    if ($this->email_salt !== $key) $this->updatedFields[] = 'email_salt';
-    $this->email_salt = $key;
+    $this->updateField('email_salt', $key);
     return $this;
   }
 
@@ -271,8 +254,7 @@ class User implements \JsonSerializable {
       $date = new DateTime($date);
       $date = $date->format('Y-m-d H:i:s');
     }
-    if ($this->email_verify !== $date) $this->updatedFields[] = 'email_verify';
-    $this->email_verify = $date;
+    $this->updateField('email_verify', $date);
     return $this;
   }
 
@@ -299,8 +281,7 @@ class User implements \JsonSerializable {
   public function setLastLogin(string $date): self {
     $date = new DateTime($date);
     $date = $date->format('Y-m-d H:i:s');
-    if ($this->last_login_at !== $date) $this->updatedFields[] = 'last_login_at';
-    $this->last_login_at = $date;
+    $this->updateField('last_login_at', $date);
     return $this;
   }
 
@@ -310,20 +291,8 @@ class User implements \JsonSerializable {
 
   public function setDisabled($disabled): self {
     $disabled = filter_var($disabled, FILTER_VALIDATE_BOOLEAN);
-    if ($this->disabled !== $disabled) $this->updatedFields[] = 'disabled';
-    // Cast bool to int for 1 or 0 in db
-    $this->disabled = (int)$disabled;
+    $this->updateField('disabled', (int)$disabled);
     return $this;
-  }
-
-  /**
-   * Has this user record mutated?
-   * Useful to see if and update should be sent to the user DataMapper
-   *
-   * @return bool
-   **/
-  public function hasUpdates(): bool {
-    return !empty($this->updatedFields);
   }
 
   /**
@@ -381,9 +350,8 @@ class User implements \JsonSerializable {
 
     // Check for legacy salted password
     if ($this->pw_salt && $this->password === crypt($password, $this->pw_salt)) {
-      // Rehash password and remove old static salt
+      // Rehash password removing old static salt
       $this->setPassword($password);
-      $this->setPasswordSalt('');
       return true;
     }
 
@@ -396,47 +364,6 @@ class User implements \JsonSerializable {
     }
 
     return $isValid;
-  }
-
-  /**
-   * Returns an array of all fields that have been set along with their values
-   *
-   * @return array
-   **/
-  public function queryHelper(): array {
-    $reflection = new \ReflectionClass($this);
-    $properties = $reflection->getProperties(\ReflectionProperty::IS_PRIVATE);
-
-    $keys = [];
-    $values = [];
-
-    foreach ($properties as $property) {
-        $name = $property->getName();
-        if (isset($this->{$name})) {
-            $keys[] = $name;
-            $values[] = $this->{$name};
-        }
-    }
-
-    return ['keys' => $keys, 'values' => $values];
-  }
-
-  /**
-   * Returns an array of all fields that have been updated along with their values
-   *
-   * @return array
-   **/
-  public function queryUpdateHelper(): array {
-    $keys = array_unique($this->updatedFields);
-    $values = [];
-
-    foreach ($keys as $key) {
-        $values[] = $this->{$key};
-    }
-
-    $this->updatedFields = [];
-
-    return ['keys' => $keys, 'values' => $values];
   }
 
   /**

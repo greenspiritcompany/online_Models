@@ -1,65 +1,65 @@
 <?php
 namespace Telltale\Model;
 
-class ChoiceDocument implements \JsonSerializable {
+class ChoiceDocument extends Model {
 
   /**
    * Primary key of the choice_documents_with_data row
    *
    * @var int -
    **/
-  private $id;
+  protected $id;
 
   /**
    * The id of the original choice document in the Global db
    *
    * @var int.
   **/
-  private $source_doc_id;
+  protected $source_doc_id;
 
   /**
    * The name of the game that this choice doc is associated with
    *
    * @var string
   **/
-  private $game_name;
+  protected $game_name;
 
   /**
    * The type of choice document this is.
    *
    * @var string
   **/
-  private $choice_doc_type;
+  protected $choice_doc_type;
 
   /**
    * The when the original choice document was created.
    *
    * @var string
   **/
-  private $source_doc_date;
+  protected $source_doc_date;
 
   /**
    * When this record was updated
    *
    * @var string
   **/
-  private $updated_at;
+  protected $updated_at;
 
   /**
    * When this record was created
    *
    * @var string
   **/
-  private $created_at;
+  protected $created_at;
 
   /**
    * The entire JSON choice document
    *
    * @var string
   **/
-  private $json_data;
+  protected $json_data;
 
-  protected $data;
+  private $data;
 
   public function __construct() {
 
@@ -145,32 +145,6 @@ class ChoiceDocument implements \JsonSerializable {
 
   public function getData(): array {
     return is_array($this->data) ? $this->data : [];
-  }
-
-  /**
-   * Returns an array of all fields that have been set along with their values
-   *
-   * @return array
-   **/
-  public function queryHelper(): array {
-    $reflection = new \ReflectionClass($this);
-    $properties = $reflection->getProperties(\ReflectionProperty::IS_PRIVATE);
-
-    $key = ''; // Used to cache
-    $keys = [];
-    $values = [];
-
-    foreach ($properties as $property) {
-      $name = $property->getName();
-      if (isset($this->{$name})) {
-          $keys[] = $name;
-          $value = $this->{$name};
-          $values[] = $value;
-          $key .= $name.':'.$value.'|';
-      }
-    }
-
-    return ['keys' => $keys, 'values' => $values, 'key' => sha1($key)];
   }
 
   /**
