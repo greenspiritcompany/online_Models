@@ -1,7 +1,7 @@
 <?php
 namespace Telltale\Model;
 
-class Entitlement implements \JsonSerializable {
+class Entitlement extends Model {
 
   /**
     * customer_fk from ttgshop_games needs to be joined with stage_auth.users on customer_fk == customer_id.
@@ -9,7 +9,7 @@ class Entitlement implements \JsonSerializable {
     *
     * @var int User ID (id PK) from the stage_auth.users table.
     */
-  private $user_id;
+  protected $user_id;
 
   /**
     * Used in-game (or website) to unlock features or the entire game using a string value with special meaning
@@ -22,7 +22,7 @@ class Entitlement implements \JsonSerializable {
     * @example seasonpass or tshirt_starlord_04
     * @var string|null A descriptive key of what the player is entitled to, like a key.
     */
-  private $relation;
+  protected $relation;
 
   /**
     * Used in-game primarilly to filter out certain relation entitlements.
@@ -33,7 +33,7 @@ class Entitlement implements \JsonSerializable {
     *
     * @var string|null A variant of the relation which is more specific than relation.
     */
-  private $item;
+  protected $item;
 
   /**
     * Every entitlement is associated with a game, currently, event DLC.
@@ -42,14 +42,14 @@ class Entitlement implements \JsonSerializable {
     *
     * @var string|null see the game table from shared, this is a text key to a "global" database of constant values.
     */
-  private $game;
+  protected $game;
 
   /**
     * ttgshop_games uses a special key of "telltale", which means that the platform is one supported by the Telltale installer.
     *
     * @var string|null see the platform table from shared, this is a text key to a "global" database of constant values.
     */
-  private $platform;
+  protected $platform;
 
   /**
     * In-game, this is used to create an entitlement linking it back to the access_point_id of the player.
@@ -59,7 +59,7 @@ class Entitlement implements \JsonSerializable {
     * @var string|null used primarily for debugging or analytics, it highlights how an entitlement was created. It may also be used in
     * refund logic.
     */
-  private $source;
+  protected $source;
 
   /**
     * A unique ID related to the source, used to find the exact reference.
@@ -68,14 +68,14 @@ class Entitlement implements \JsonSerializable {
     *
     * @var int|null an ID related to the source if there's an ID related to it.
     */
-  private $source_id;
+  protected $source_id;
 
     /**
     * The datetime when the entitlement record was created
     *
     * @var datetime created_at
     */
-  private $created_at;
+  protected $created_at;
 
   /**
     * Entitlements should not allow being deleted.
@@ -86,7 +86,7 @@ class Entitlement implements \JsonSerializable {
     *
     * @var bool allows an entitlement to be used, it's false if this entitlement should not longer be used. This is true by default, if you want to revoke an entitlement, set it to false.
     */
-  private $enabled;
+  protected $enabled;
 
   /**
     * Not a database field, this virtual field is specific for entitlements created by a code. The process is as follows:
@@ -103,7 +103,7 @@ class Entitlement implements \JsonSerializable {
     *
     * @var int check if the code has been redeemed, for entitlements created by a code.
     */
-  private $used;
+  protected $used;
 
   /**
     * This might be needed for textures in the game or customizations. Designed for customizations on a personal level and not global.
@@ -130,7 +130,7 @@ class Entitlement implements \JsonSerializable {
     *
     * @var array extra attributes (must be JSON), not currently used but could be for anything related to the record.
     */
-  private $attributes;
+  protected $attributes;
 
   public function __construct() {
     // Decode attributes when set by PDO
@@ -233,24 +233,6 @@ class Entitlement implements \JsonSerializable {
   public function setAttributes(array $attributes): self {
     $this->attributes = $attributes;
     return $this;
-  }
-
-  public function queryHelper(): array {
-    $reflection = new \ReflectionClass($this);
-    $properties = $reflection->getProperties(\ReflectionProperty::IS_PRIVATE);
-
-    $keys = [];
-    $values = [];
-
-    foreach ($properties as $property) {
-      $name = $property->getName();
-      if (isset($this->{$name})) {
-        $keys[] = $name;
-        $values[] = $this->{$name};
-      }
-  }
-
-    return ['keys' => $keys, 'values' => $values];
   }
 
   public function jsonSerialize(): array {

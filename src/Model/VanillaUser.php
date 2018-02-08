@@ -3,33 +3,26 @@ namespace Telltale\Model;
 use DateTime;
 use Exception;
 
-class VanillaUser implements \JsonSerializable {
+class VanillaUser extends Model {
 
-  private $UserID;
-  private $AuthID;
-  private $Name;
-  private $Photo;
-  private $About;
-  private $Email;
-  private $DateOfBirth;
- // private $CountVisits;
-  private $DateUpdated;
-  //private $DateFirstVisit;
-  //private $DateLastActive;
-  private $InsertIPAddress;
-  private $LastIPAddress;
-  //private $Score;
-  //private $Admin;
-  private $Banned;
-  //private $Deleted;
+  protected $UserID;
+  protected $AuthID;
+  protected $Name;
+  protected $Photo;
+  protected $About;
+  protected $Email;
+  protected $DateOfBirth;
+ // protected $CountVisits;
+  protected $DateUpdated;
+  //protected $DateFirstVisit;
+  //protected $DateLastActive;
+  protected $InsertIPAddress;
+  protected $LastIPAddress;
+  //protected $Score;
+  //protected $Admin;
+  protected $Banned;
+  //protected $Deleted;
 
-  /** 
-   * Stores what fields have been set and now differ from their initial values
-   * Used by queryUpdateHelper to help build PDO statements
-   * 
-   * @var array updatedFields
-   **/
-  protected $updatedFields = [];
 
   public function getUserID() {
     return (int)$this->UserID;
@@ -43,63 +36,58 @@ class VanillaUser implements \JsonSerializable {
 
   public function getAuthId() {
     return (int)$this->AuthID;
-  }  
+  }
 
   public function setAuthId(int $authID): self {
     if ($this->AuthID) throw new Exception('AuthID should not be changed');
     $this->AuthID = $authID;
     return $this;
-  }  
+  }
 
   public function getName() {
     return $this->Name;
   }
-  
+
   public function setName(string $name): self {
-    if ($this->Name !== $name) $this->updatedFields[] = 'Name';
-    $this->Name = $name;
+    $this->updateField('Name', $name);
     return $this;
   }
 
   public function getPhoto() {
     return $this->Photo;
   }
-  
+
   public function setPhoto(string $photo): self {
-    if ($this->Photo !== $photo) $this->updatedFields[] = 'Photo';
-    $this->Photo = $photo;
+    $this->updateField('Photo', $photo);
     return $this;
   }
 
   public function getAbout() {
     return $this->About;
   }
-  
+
   public function setAbout(string $about): self {
-    if ($this->About !== $about) $this->updatedFields[] = 'About';
-    $this->About = $about;
+    $this->updateField('About', $about);
     return $this;
   }
 
   public function getEmail() {
     return $this->Email;
   }
-  
+
   public function setEmail(string $email): self {
-    if ($this->Email !== $email) $this->updatedFields[] = 'Email';
-    $this->Email = $email;
+    $this->updateField('Email', $email);
     return $this;
   }
 
   public function getDateOfBirth() {
     return $this->DateOfBirth;
   }
-  
+
   public function setDateOfBirth(string $dateOfBirth): self {
     $dateOfBirth = new DateTime($dateOfBirth);
     $dateOfBirth = $dateOfBirth->format('Y-m-d H:i:s');
-    if ($this->DateOfBirth !== $dateOfBirth) $this->updatedFields[] = 'DateOfBirth';
-    $this->DateOfBirth = $dateOfBirth;
+    $this->updateField('DateOfBirth', $dateOfBirth);
     return $this;
   }
 
@@ -109,12 +97,12 @@ class VanillaUser implements \JsonSerializable {
 
   public function getIPAddress() {
     $ipAddress = $this->LastIPAddress ?? $this->InsertIPAddress;
-    
+
     // If it's already a valid IP address, don't bother unpacking it.
     if (filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4|FILTER_FLAG_IPV6)) {
       return $ipAddress;
     }
-    
+
     return $ipAddress ? inet_ntop($ipAddress) : $ipAddress;
   }
 
@@ -137,61 +125,9 @@ class VanillaUser implements \JsonSerializable {
     return (bool)$this->Banned;
   }
 
-  /** 
-   * Has this record mutated?
-   * Useful to see if and update should be sent to the user DataMapper
-   * 
-   * @return bool
-   **/
-  public function hasUpdates(): bool {
-    return !empty($this->updatedFields);
-  }
-
-  /** 
-   * Returns an array of all fields that have been set along with their values
-   * 
-   * @return array
-   **/
-  public function queryHelper(): array {
-    $reflection = new \ReflectionClass($this);
-    $properties = $reflection->getProperties(\ReflectionProperty::IS_PRIVATE);
-
-    $keys = [];
-    $values = [];
-
-    foreach ($properties as $property) {
-      $name = $property->getName();
-      if (isset($this->{$name})) {
-        $keys[] = $name;
-        $values[] = $this->{$name};
-      }
-    }
-
-    return ['keys' => $keys, 'values' => $values];
-  }
-
-  /** 
-   * Returns an array of all fields that have been updated along with their values
-   * 
-   * @return array
-   **/
-  public function queryUpdateHelper(): array {
-    $keys = array_unique($this->updatedFields);
-    $values = [];
-
-    foreach ($keys as $key) {
-      $values[] = $this->{$key};
-    }
-
-    $this->updatedFields = [];
-
-    return ['keys' => $keys, 'values' => $values];
-  }
-
-
-  /** 
+  /**
    * Returns an array of jsonSerialize values safe to display to the public
-   * 
+   *
    * @return array
    **/
   public function jsonSerialize(): array {

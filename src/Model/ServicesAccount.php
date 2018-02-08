@@ -1,35 +1,35 @@
 <?php
 namespace Telltale\Model;
 
-class ServicesAccount implements \JsonSerializable {
+class ServicesAccount extends Model {
 
   /**
    * The "id" of the services account record
    *
    * @var string -
    **/
-  private $id;
+  protected $id;
 
   /**
    * The "username". Not really used.
    *
    * @var string.
   **/
-  private $username;
+  protected $username;
 
   /**
    * The "ttg_account_id" The auth table id for this user.
    *
    * @var string
   **/
-  private $ttg_account_id;
+  protected $ttg_account_id;
 
   /**
    * When this record was created
    *
    * @var datetime|null
   **/
-  private $created_at;
+  protected $created_at;
 
   public function getId() {
     return $this->id;
@@ -65,29 +65,6 @@ class ServicesAccount implements \JsonSerializable {
 
   public function getCreatedAt() {
     return $this->created_at;
-  }
-
-  /**
-   * Returns an array of all fields that have been set along with their values
-   *
-   * @return array
-   **/
-  public function queryHelper(): array {
-    $reflection = new \ReflectionClass($this);
-    $properties = $reflection->getProperties(\ReflectionProperty::IS_PRIVATE);
-
-    $keys = [];
-    $values = [];
-
-    foreach ($properties as $property) {
-        $name = $property->getName();
-        if (isset($this->{$name})) {
-            $keys[] = $name;
-            $values[] = $this->{$name};
-        }
-    }
-
-    return ['keys' => $keys, 'values' => $values];
   }
 
   /**
