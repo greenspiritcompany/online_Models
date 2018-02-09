@@ -91,13 +91,10 @@ class UserChoices {
     }
 
     // Get the full choice docs for this game
-    $choiceDocQuery = new ChoiceDocumentModel();
-    $choiceDocQuery->setChoiceDocType($docType);
-    $choiceDocQuery->setGameName($game);
-    $choiceDocs = $this->choiceDocument->find($choiceDocQuery);
+    $choiceDocs = $this->getChoiceDocument($docType, $game);
 
     if (!$choiceDocs) {
-      $this->log->warning('No Choice Documents were found.', ['game' => $game, 'type' => $docType]);
+      $this->log->info('No Choice Documents were found.', ['game' => $game, 'type' => $docType]);
       return $this->statusFailResponse('choice_doc');
     }
 
@@ -209,10 +206,7 @@ class UserChoices {
     }
 
     // Get the full choice docs for this game
-    $choiceDocQuery = new ChoiceDocumentModel();
-    $choiceDocQuery->setChoiceDocType($docType);
-    $choiceDocQuery->setGameName($game);
-    $choiceDocs = $this->choiceDocument->find($choiceDocQuery);
+    $choiceDocs = $this->getChoiceDocument($docType, $game);
 
     if (!$choiceDocs) {
       $this->log->info('No Choice Documents were found.', ['game' => $game, 'type' => $docType]);
@@ -421,6 +415,49 @@ class UserChoices {
     }
 
     return false;
+  }
+
+  /**
+   * Return a choice document for a specific game
+   *
+   * @param string $docType
+   * @param string $game
+   * @return ChoiceDocumentModel|bool
+   */
+  private function getChoiceDocument(string $docType, string $game) {
+
+    // In cache?
+    if ($this->cache) {
+      $cacheKey = implode('|', [
+        getenv('ENV'),
+        'ChoiceDocument',
+        $docType,
+        $game
+      ]);
+
+      $cacheItem = $this->cache->getItem($cacheKey);
+
+      if ($cacheItem->isHit()) {
+        return $cacheItem->get();
+      }
+    }
+
+    // Get the full choice docs for this game
+    $choiceDocQuery = new ChoiceDocumentModel();
+    $choiceDocQuery->setChoiceDocType($docType);
+    $choiceDocQuery->setGameName($game);
+    $choiceDocs = $this->choiceDocument->find($choiceDocQuery);
+
+    // Cache the result
+    if ($this->cache && $choiceDocs) {
+      // Store these results in the cache
+      $exp = new \DateInterval('PT1H'); // 1 hour
+      $cacheItem->expiresAfter($exp);
+      $cacheItem->set($choiceDocs);
+      $this->cache->save($cacheItem);
+    }
+
+    return $choiceDocs;
   }
 
   /**
