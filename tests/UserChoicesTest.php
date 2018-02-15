@@ -119,6 +119,14 @@ class UserChoicesTest extends AbstractDBTest {
           ]));
         }
 
+        // pendingCacheMessage we put in cache has not been replaced by the above kinesis responses yet
+        if ($key == "|PHPUnitWaiting|CloudSaveChoiceData|100|phpunit_model_tests") {
+          return $this->buildItem($key, true, json_encode([
+            'status' => 'pending',
+            'datetime' => date('Y-m-d H:i:s')
+          ]));
+        }
+
         return $this->buildItem($key, false);
       }
     };
@@ -307,8 +315,8 @@ class UserChoicesTest extends AbstractDBTest {
     ], $result['meta']);
   }
 
-  public function testFetchNoMatches() {
-    $result = $this->userChoices->fetch(self::USER_ID, self::GAME_NAME, 'stats_extended', 'PHPUnitNoMatch');
+  public function testFetchWaiting() {
+    $result = $this->userChoices->fetch(self::USER_ID, self::GAME_NAME, 'stats_extended', 'PHPUnitWaiting');
 
     $this->assertCount(1, $result);
     $this->assertArrayHasKey('meta', $result);
@@ -316,6 +324,19 @@ class UserChoicesTest extends AbstractDBTest {
     $this->assertEquals([
       'status' => 'pending',
       'message' => 'Waiting for player data...',
+      'type' => 'stats_extended',
+    ], $result['meta']);
+  }
+
+  public function testFetchNoMatches() {
+    $result = $this->userChoices->fetch(self::USER_ID, self::GAME_NAME, 'stats_extended', 'PHPUnitNoMatch');
+
+    $this->assertCount(1, $result);
+    $this->assertArrayHasKey('meta', $result);
+
+    $this->assertEquals([
+      'status' => 'failed',
+      'message' => 'No events were found for this player.',
       'type' => 'stats_extended',
     ], $result['meta']);
   }

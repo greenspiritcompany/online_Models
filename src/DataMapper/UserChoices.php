@@ -140,11 +140,17 @@ class UserChoices {
     // Get user choice data from cache
     $userChoiceData = json_decode($servicesCacheItem->get(), true) ?? [];
 
+    // If cache result still has our pendingCacheMessage, continue to return pending response
+    if (array_key_exists('status', $userChoiceData) && $userChoiceData['status'] == 'pending') {
+      return $this->statusResponse("pending", "Waiting for player data...", $docType);
+    }
+
     $playerEventList = $this->getPlayerEventList($userChoiceData);
 
-    // If we don't have any matches yet, return a pending message
+    // The resulting player event matches array is empty
     if (empty($playerEventList)) {
-      return $this->statusResponse("pending", "Waiting for player data...", $docType);
+      $this->log->info('No player event matches were returned from kinesis.', ['userID' => $userID, 'game' => $game, 'type' => $docType]);
+      return $this->statusFailResponse($docType);
     }
 
     // Determine what the current live episode is for this game
