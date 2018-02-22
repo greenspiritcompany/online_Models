@@ -2,6 +2,10 @@
 namespace Telltale\DataMapper;
 
 use Psr\Log\NullLogger;
+use Aws\Kinesis\KinesisClient;
+use Aws\Kinesis\Exception\KinesisException;
+use Aws\DynamoDb\DynamoDbClient;
+use Aws\DynamoDb\Exception\DynamoDbException;
 
 use Telltale\DataMapper\ImportantEvents;
 use Telltale\DataMapper\ServicesAccount;
@@ -17,6 +21,12 @@ use PDOException;
 use Psr\Cache\CacheItemPoolInterface;
 
 class UserChoices {
+
+  // Sets what region the user choices are coming from
+  const AWS_CLIENT_CONFIG = [
+    'region' => 'us-west-2',
+    'version' => 'latest'
+  ];
 
   const CACHE_NAMESPACE_CHOICE_DATA = 'CloudSaveChoiceData|';
 
@@ -53,8 +63,8 @@ class UserChoices {
 
     $this->choiceDocument = new ChoiceDocument($servicesPDO, $cache);
 
-    $this->kinesis = new AWSKinesis($this->log);
-    $this->dynamoDB = new AWSDynamoDB($this->log);
+    $this->kinesis = new KinesisClient(self::AWS_CLIENT_CONFIG);
+    $this->dynamoDB = new DynamoDbClient(self::AWS_CLIENT_CONFIG);
   }
 
   /**
@@ -130,8 +140,28 @@ class UserChoices {
 
       $this->servicesCache->save($servicesCacheItem);
 
-      // Trigger the kinesis process
-      $this->kinesis->sendCloudSaveProcessRequest($servicesAccountId, $game, $namespace);
+      // Craft the record being sent to Kinesis
+      $kinesisRecord = [
+        'StreamName' => $namespace . '-cloud-saves', // The name of the stream to put the data record into.
+        'PartitionKey' => uniqid(), // Determines which shard in the stream the data record is assigned to
+        'Data' => json_encode([
+          'account_id' => $servicesAccountId,
+          'game' => $game
+        ]),
+      ];
+
+      // Write a record into Kinesis to trigger cloud save process
+      try {
+        $kinesisResult = $this->kinesis->putRecord($kinesisRecord);
+      } catch (KinesisException $e) {
+        $this->log->error('KinesisException: Failed to submit UserChoices record.', [
+          'AWSClientResponse' => $e->getMessage(),
+          'kinesisRecord' => $kinesisRecord
+        ]);
+        return $this->statusFailResponse($docType);
+      }
+
+      $this->log->debug('Sent CloudSave player event request via Kinesis', $kinesisResult->toArray());
 
       // Choices are not ready yet. Try again soon.
       return $this->statusResponse("pending", "Searching for player data.", $docType);
@@ -153,9 +183,6 @@ class UserChoices {
       return $this->statusFailResponse($docType);
     }
 
-    // Determine what the current live episode is for this game
-    $currentLiveEpisodeId = '201'; // TODO: Not enforcing this yet
-
     $importantEventsSymbolDictionary = $this->importantEvents->fetchSymbolDictionary($game);
 
     if (empty($importantEventsSymbolDictionary)) {
@@ -163,7 +190,7 @@ class UserChoices {
       return $this->statusFailResponse($docType);
     }
 
-    $playerChoiceDocument = $this->createPlayerChoiceDocument($choiceDocs, $playerEventList, $currentLiveEpisodeId, $importantEventsSymbolDictionary);
+    $playerChoiceDocument = $this->createPlayerChoiceDocument($choiceDocs, $playerEventList, $importantEventsSymbolDictionary);
 
     if ($this->cache) {
       // Store these results in the cache
@@ -219,32 +246,23 @@ class UserChoices {
       return $this->statusFailResponse('choice_doc');
     }
 
-    // Check if the important events have been placed in cache
-    $servicesCacheKey = implode('|', [
-      '',
-      $namespace,
-      'accessPointChoiceData',
-      $accessPointID,
-      $game
-    ]);
+    // Get user choice data from access point
+    $dynamoDBQuery = [
+      'TableName' => ucfirst($namespace) . ($namespace != 'staging' ? 'Important' : '') . ucfirst($game) . 'Events',
+      'KeyConditions' => [
+        'AccessPointId' => [
+          'AttributeValueList' => [
+            ['S' => (string)$accessPointID]
+          ],
+          'ComparisonOperator' => 'EQ'
+        ]
+      ],
+    ];
 
-    $servicesCacheItem = $this->servicesCache->getItem($servicesCacheKey);
+    $dynamoDBResult = $this->dynamoDB->query($dynamoDBQuery);
 
-     // If there is no cache hit get game events from dynamoDB
-    if (!$servicesCacheItem->isHit()) {
-      // Get user choice data from access point
-      $userChoiceData = $this->dynamoDB->accessPointGameEvents($accessPointID, $game, $namespace);
-      // Cache in services
-      $servicesCacheItem->set($userChoiceData);
-      $servicesCacheItem->expiresAt(3600);
-
-      $this->servicesCache->save($servicesCacheItem);
-    }
-
-    $playerEventList = $this->getPlayerEventList($servicesCacheItem->get());
-
-    if (empty($playerEventList)) {
-      // If user has no events it is safe to exit out early with "no results" response.
+    if (empty($dynamoDBResult['Items'])) {
+      $this->log->info('AccessPoint dynamoDBQuery has no items.', ['game' => $game, 'accessPointID' => $accessPointID]);
       return $this->statusFailResponse($docType);
     }
 
@@ -255,10 +273,12 @@ class UserChoices {
       return $this->statusFailResponse($docType);
     }
 
-    // Determine what the current live episode is for this game
-    $currentLiveEpisodeId = '201'; // TODO: Not enforcing this yet
+    // Iterate over the dynamoDBResult AttributeValues, building the playerEventList from the dynamoDBResult items
+    $playerEventList = array_map(function($item) {
+      return $item['Value']['S']; // expect this to be the base64_event_value
+    }, $dynamoDBResult['Items']);
 
-    $playerChoiceDocument = $this->createPlayerChoiceDocument($choiceDocs, $playerEventList, $currentLiveEpisodeId, $importantEventsSymbolDictionary);
+    $playerChoiceDocument = $this->createPlayerChoiceDocument($choiceDocs, $playerEventList, $importantEventsSymbolDictionary);
 
     if ($this->cache) {
       // Store these results in the cache
@@ -276,11 +296,10 @@ class UserChoices {
    *
    * @param ChoiceDocumentModel $choiceDocument
    * @param array $playerEventList
-   * @param int $currentLiveEpisodeId
    * @param array $importantEventsSymbolDictionary
    * @return array
    */
-  private function createPlayerChoiceDocument(ChoiceDocumentModel $choiceDocument, array $playerEventList, int $currentLiveEpisodeId, array $importantEventsSymbolDictionary): array {
+  private function createPlayerChoiceDocument(ChoiceDocumentModel $choiceDocument, array $playerEventList, array $importantEventsSymbolDictionary): array {
 
     if (empty($playerEventList)) {
       return $this->statusFailResponse($choiceDocument->getChoiceDocType());

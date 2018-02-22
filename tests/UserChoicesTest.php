@@ -6,6 +6,8 @@ use Telltale\Model\User as UserModel;
 
 use Telltale\DataMapper\ServicesCache;
 
+use Aws\Result as AwsResult;
+
 class UserChoicesTest extends AbstractDBTest {
 
   const USER_ID = 110;
@@ -142,54 +144,60 @@ class UserChoicesTest extends AbstractDBTest {
      */
     $this->userChoices = new UserChoices($this->getPDO(), $this->getPDO(), $this->getCache(), $servicesCache);
 
-    // Bonk! We must mock the kenesis and dynamoDB data mappers
+    // Use reflection to mock the AwsClients
     $reflection = new \ReflectionClass($this->userChoices);
     $kinesisProperty = $reflection->getProperty('kinesis');
     $kinesisProperty->setAccessible(true);
     $kinesisProperty->setValue($this->userChoices, new class() {
-      public function sendCloudSaveProcessRequest(int $account_id, string $game, string $environment = 'production') {
+      // https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-kinesis-2013-12-02.html#putrecord
+      public function putRecord(array $kinesisRecord) {
 
-        if ($account_id !== UserChoicesTest::SERVICES_USER_ID) {
-          throw \Exception('sendCloudSaveProcessRequest mock got unexpected account_id');
+        if (empty($kinesisRecord['StreamName'])) {
+          throw new \Exception('AWS kinesis putRecord mock got unexpected StreamName');
         }
 
-        if ($game !== UserChoicesTest::GAME_NAME) {
-          throw \Exception('sendCloudSaveProcessRequest mock got unexpected game');
+        $data = json_decode($kinesisRecord['Data'], true) ?? [];
+
+        if ($data['account_id'] !== UserChoicesTest::SERVICES_USER_ID) {
+          throw new \Exception('AWS kinesis putRecord mock got unexpected account_id');
         }
 
-        return true;
+        if ($data['game'] !== UserChoicesTest::GAME_NAME) {
+          throw new \Exception('AWS kinesis putRecord mock got unexpected game');
+        }
+
+        return new AwsResult([
+          'ShardId' => 'mocked'
+        ]);
       }
     });
     $dynamoDBProperty = $reflection->getProperty('dynamoDB');
     $dynamoDBProperty->setAccessible(true);
     $dynamoDBProperty->setValue($this->userChoices, new class() {
-      public function accessPointGameEvents(int $accessPointID, string $game, string $environment = 'production'): array {
+      // https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-dynamodb-2012-08-10.html#query
+      public function query(array $dynamoDBQuery): array {
 
-        if ($game != UserChoicesTest::GAME_NAME) {
-          return false;
+        if ($dynamoDBQuery['TableName'] !== 'Important' . ucfirst(UserChoicesTest::GAME_NAME) . 'Events') {
+          throw new \Exception('dynamoDBQuery does not have expected table. Got: ' . $dynamoDBQuery['TableName']);
         }
 
+        $accessPointID = (int)$dynamoDBQuery['KeyConditions']['AccessPointId']['AttributeValueList'][0]['S'];
+
         if ($accessPointID === UserChoicesTest::ACCESS_POINT_N0_MATCHES) {
-          return [
-            'matches' => [
-              ['base64_event_value' => 'random='],
-            ],
-          ];
+          return ['Items' => [
+            ['Value' => ['S' => 'random=']],
+          ]];
         }
 
         if ($accessPointID !== UserChoicesTest::VALID_ACCESS_POINT) {
-          return [
-            'matches' => []
-          ];
+          return []; // no results
         }
 
-        return [
-          'matches' => [
-            ['base64_event_value' => 'KDuaLKJPMdU='],
-            ['base64_event_value' => 'wCX9xt+bTQQ='],
-            ['base64_event_value' => 'tW1YGtUvNaw='],
-          ],
-        ];
+        return ['Items' => [
+          ['Value' => ['S' => 'KDuaLKJPMdU=']],
+          ['Value' => ['S' => 'wCX9xt+bTQQ=']],
+          ['Value' => ['S' => 'tW1YGtUvNaw=']],
+        ]];
       }
     });
   }
