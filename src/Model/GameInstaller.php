@@ -99,7 +99,7 @@ class GameInstaller extends Model {
   public function setFilePath(string $filepath): self {
     $this->updateField('filepath', $filepath);
     $this->download = $this->cdnRootPath . $this->filepath;
-    return self;
+    return $this;
   }
 
   public function getDownload(): string {
