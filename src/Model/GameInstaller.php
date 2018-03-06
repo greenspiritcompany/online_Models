@@ -9,7 +9,7 @@ class GameInstaller extends Model {
    *
    * @var string
    */
-  private $game;
+  protected $game;
 
   /**
    * The platform the installer is available for
@@ -17,42 +17,42 @@ class GameInstaller extends Model {
    *
    * @var string
    */
-  private $platform;
+  protected $platform;
 
   /**
    * Some legacy installers are only for specific episodes. Should be null if installer handles entire season.
    *
    * @var int|null
    */
-  private $episode;
+  protected $episode;
 
   /**
    * The relative path to the installer after the cdnRootPath
    *
    * @var string
    */
-  private $filepath;
+  protected $filepath;
 
   /**
    * The datetime when the game_installer record was created
    *
    * @var string
    */
-  private $created_at;
+  protected $created_at;
 
   /**
    * The datetime when the game_installer record was last updated
    *
    * @var string
    */
-  private $updated_at;
+  protected $updated_at;
 
   /**
    * Toggles the ability for this installer to be downloaded
    *
    * @var int
    */
-  private $enabled;
+  protected $enabled;
 
   /**
    * CDN Root url
@@ -60,7 +60,7 @@ class GameInstaller extends Model {
    *
    * @var string
    */
-  protected $cdnRootPath = 'https://cdn-vault.telltalegames.com';
+  private $cdnRootPath = 'https://cdn-vault.telltalegames.com';
 
   /**
    * Full download path
@@ -68,7 +68,7 @@ class GameInstaller extends Model {
    *
    * @var string
    */
-  protected $download;
+  private $download;
 
   public function __construct() {
     $this->download = $this->cdnRootPath . $this->filepath;
