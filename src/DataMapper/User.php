@@ -173,13 +173,17 @@ class User {
     * @return bool
     */
   public function update(UserModel $user) {
-
     $userId = $user->getId();
-    $queryHelper = $user->queryUpdateHelper();
 
-    if (!($queryHelper['keys'] && $userId)) {
-      throw new PDOException('No user fields to update');
+    if (!$userId) {
+      throw new PDOException('Unable to update user record', 400);
     }
+
+    if (!$user->hasUpdates()) {
+      throw new PDOException('No user updates were made', 409);
+    }
+
+    $queryHelper = $user->queryUpdateHelper();
 
     // Add user id a the end of our values array for prepared statement
     $queryHelper['values'][] = $userId;
