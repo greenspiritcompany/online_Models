@@ -83,6 +83,15 @@ class GameInstaller extends Model {
     return $this;
   }
 
+  public function getPlatform(): string {
+    return $this->platform;
+  }
+
+  public function setPlatform(string $platform): self {
+    $this->updateField('platform', $platform);
+    return $this;
+  }
+
   public function getEpisode(): int {
     return $this->episode;
   }

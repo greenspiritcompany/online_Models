@@ -419,12 +419,32 @@ class UserTest extends AbstractDBTest {
    * Expect a PDOException
    *
    * @expectedException        PDOException
-   * @expectedExceptionMessage No user fields to update
+   * @expectedExceptionMessage No user updates were made
    */
   public function testNoUpdates() {
     $userToUpdate = $this->user->get(self::USERS_DATASET[1]['id']);
+
+    $userToUpdate->setUsername('updated'); // from null. see self::USERS_DATASET[1]['username']
+    $userToUpdate->setEmail('updated@example.com');
+    $userToUpdate->setEmail('updated.again@example.com');
+
     $hasUpdates = $userToUpdate->hasUpdates();
-    $this->assertFalse($hasUpdates);
+    $this->assertTrue($hasUpdates);
+
+    $updates = $userToUpdate->queryUpdateHelper();
+
+    $this->assertInternalType('array', $updates);
+    $this->assertEquals([
+      'keys',
+      'values'
+    ], array_keys($updates));
+
+    $this->assertEquals(['username', 'email'], $updates['keys']);
+    $this->assertEquals(['updated', 'updated.again@example.com'], $updates['values']);
+
+    // Running queryUpdateHelper above would have exported all updates and reset count
+    $hasUpdates2 = $userToUpdate->hasUpdates();
+    $this->assertFalse($hasUpdates2);
 
     $result = $this->user->update($userToUpdate);
     $this->assertFalse($result); // should never run
@@ -434,7 +454,7 @@ class UserTest extends AbstractDBTest {
    * Expect a PDOException
    *
    * @expectedException        PDOException
-   * @expectedExceptionMessage No user fields to update
+   * @expectedExceptionMessage Unable to update user record
    */
   public function testUpdateIncompleteModel() {
 
