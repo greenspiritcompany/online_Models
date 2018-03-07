@@ -47,7 +47,7 @@ abstract class Model implements JsonSerializable {
    * @return array
    **/
   public function queryUpdateHelper(): array {
-    $keys = array_unique($this->updatedProperties);
+    $keys = array_values(array_unique($this->updatedProperties));
     $values = [];
 
     foreach ($keys as $key) {
