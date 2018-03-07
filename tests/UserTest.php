@@ -424,6 +424,9 @@ class UserTest extends AbstractDBTest {
   public function testNoUpdates() {
     $userToUpdate = $this->user->get(self::USERS_DATASET[1]['id']);
 
+    $hasUpdates = $userToUpdate->hasUpdates();
+    $this->assertFalse($hasUpdates);
+
     $userToUpdate->setUsername('updated'); // from null. see self::USERS_DATASET[1]['username']
     $userToUpdate->setEmail('updated@example.com');
     $userToUpdate->setEmail('updated.again@example.com');
@@ -443,8 +446,8 @@ class UserTest extends AbstractDBTest {
     $this->assertEquals(['updated', 'updated.again@example.com'], $updates['values']);
 
     // Running queryUpdateHelper above would have exported all updates and reset count
-    $hasUpdates2 = $userToUpdate->hasUpdates();
-    $this->assertFalse($hasUpdates2);
+    $hasUpdates = $userToUpdate->hasUpdates();
+    $this->assertFalse($hasUpdates);
 
     $result = $this->user->update($userToUpdate);
     $this->assertFalse($result); // should never run
