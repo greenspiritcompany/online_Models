@@ -112,19 +112,19 @@ class AdminUser {
     list($username, $time, $hash) = explode(',', $token);
 
     if (!($username && !is_numeric($username) && $time && $hash)) {
-      throw new \Exception('Invalid User Admin Token');
+      throw new \Exception('Invalid User Admin Token', 400);
     }
 
     $user = $this->get($username);
 
     if (!$user) {
-      throw new \Exception('Session Expired');
+      throw new \Exception('Session Expired', 401);
     }
 
     // Token must still match the user's
     $expectedToken = $user->authToken($time);
-    if (!hash_equals($token, $expectedToken)) {
-      throw new \Exception('Token Validation Failed');
+    if (!hash_equals($expectedToken, $token)) {
+      throw new \Exception('Token Validation Failed', 401);
     }
 
     return $user;
