@@ -238,11 +238,17 @@ class UserChoices {
       }
     }
 
+    $logDetails = [
+      'game' => $game,
+      'type' => $docType,
+      'accessPoint' => $accessPointID,
+    ];
+
     // Get the full choice docs for this game
     $choiceDocs = $this->getChoiceDocument($docType, $game);
 
     if (!$choiceDocs) {
-      $this->log->info('No Choice Documents were found.', ['game' => $game, 'type' => $docType]);
+      $this->log->info('No Choice Documents were found.', $logDetails);
       return $this->statusFailResponse('choice_doc');
     }
 
@@ -262,19 +268,34 @@ class UserChoices {
     $dynamoDBResult = $this->dynamoDB->query($dynamoDBQuery);
 
     if (empty($dynamoDBResult['Items'])) {
-      $this->log->info('AccessPoint dynamoDBQuery has no items.', ['game' => $game, 'accessPointID' => $accessPointID]);
+      $this->log->info('AccessPoint dynamoDBQuery has no items.', $logDetails);
       return $this->statusFailResponse($docType);
     }
 
     $importantEventsSymbolDictionary = $this->importantEvents->fetchSymbolDictionary($game);
 
     if (empty($importantEventsSymbolDictionary)) {
-      $this->log->warning('No important events were found.', ['game' => $game]);
+      $this->log->warning('No important events were found.', $logDetails);
       return $this->statusFailResponse($docType);
     }
 
     // Iterate over the dynamoDBResult AttributeValues, building the playerEventList from the dynamoDBResult items
-    $playerEventList = array_map(function($item) {
+    $log = $this->log;
+    $playerEventList = array_map(function($item) use ($log, $logDetails) {
+
+      // Can't trust results from DynamoDB now?
+      if (empty($item['Value'])) {
+        $logDetails['item'] = $item;
+        $log->warning('dynamoDBResult Choice Item has empty Value', $logDetails);
+        return '';
+      }
+
+      if (empty($item['Value']['S'])) {
+        $logDetails['item'] = $item;
+        $log->warning('dynamoDBResult Choice Item has empty Value[S]', $logDetails);
+        return '';
+      }
+
       return $item['Value']['S']; // expect this to be the base64_event_value
     }, $dynamoDBResult['Items']);
 

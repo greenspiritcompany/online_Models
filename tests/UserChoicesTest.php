@@ -14,6 +14,7 @@ class UserChoicesTest extends AbstractDBTest {
   const SERVICES_USER_ID = 100;
   const VALID_ACCESS_POINT = 1337;
   const ACCESS_POINT_N0_MATCHES = 41453;
+  const ACCESS_POINT_BAD_DATA = 41454;
   const GAME_NAME = 'phpunit_model_tests'; // determines important_events database name
   const CHOICE_DOC_TYPE = 'stats_extended';
 
@@ -186,6 +187,15 @@ class UserChoicesTest extends AbstractDBTest {
         if ($accessPointID === UserChoicesTest::ACCESS_POINT_N0_MATCHES) {
           return ['Items' => [
             ['Value' => ['S' => 'random=']],
+          ]];
+        }
+
+        if ($accessPointID === UserChoicesTest::ACCESS_POINT_BAD_DATA) {
+          return ['Items' => [
+            ['Unexpected' => 'Value'],
+            ['Value' => NULL],
+            ['Value' => ['Unexpected' => 'Value']],
+            ['Value' => 'Unexpected'],
           ]];
         }
 
@@ -448,6 +458,20 @@ class UserChoicesTest extends AbstractDBTest {
 
     $this->assertCount(10, $result['choice_document'][0]['description']);
     $this->assertCount(10, $result['choice_document'][0]['question']);
+  }
+
+  // Expect same result as above for the same reasons
+  public function testFetchByAccessPointBadData() {
+    $result = $this->userChoices->fetchByAccessPoint(self::ACCESS_POINT_BAD_DATA, self::GAME_NAME);
+
+    $this->assertCount(2, $result);
+    $this->assertArrayHasKey('meta', $result);
+
+    $this->assertEquals([
+      'status' => 'success',
+      'message' => 'Events were found for this player.',
+      'type' => 'stats_extended',
+    ], $result['meta']);
   }
 
 }
