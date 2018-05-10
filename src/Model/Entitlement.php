@@ -241,6 +241,8 @@ class Entitlement extends Model {
       'relation' => $this->getRelation(),
       'item' => $this->getItem(),
       'platform' => $this->getPlatform(),
+      'source' => $this->getSource(),
+      'source_id' => $this->getSourceId(),
       'created_at' => $this->getCreatedAt(),
       'attributes' => $this->getAttributes(),
     ];
