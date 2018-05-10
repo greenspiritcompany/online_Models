@@ -79,6 +79,7 @@ class EntitlementTest extends AbstractDBTest {
       $item = 'game_installer';
       $platform = 'telltale';
       $source = 'ElectronicFulfillmentRequest';
+      $sourceId = '10000367054970014';
       $createdAt = '2017-06-22 18:05:06';
       $attributes = [
         'orderID' => '10008743320014',
@@ -104,8 +105,8 @@ class EntitlementTest extends AbstractDBTest {
       $this->assertEquals($item, $result[0]->getItem());
       $this->assertEquals($platform, $result[0]->getPlatform());
       $this->assertEquals($source, $result[0]->getSource());
-      $this->assertEquals('10000367054970014', $result[0]->getSourceID());
-      $this->assertEquals('2017-06-22 18:05:06', $result[0]->getCreatedAt());
+      $this->assertEquals($sourceId, $result[0]->getSourceID());
+      $this->assertEquals($createdAt, $result[0]->getCreatedAt());
       $this->assertTrue($result[0]->getEnabled());
       $this->assertEquals($attributes, $result[0]->getAttributes());
       $this->assertEquals([
@@ -113,6 +114,8 @@ class EntitlementTest extends AbstractDBTest {
         'relation' => $relation,
         'item' => $item,
         'platform' => $platform,
+        'source' => $source,
+        'source_id' => $sourceId,
         'created_at' => $createdAt,
         'attributes' => $attributes,
       ], $result[0]->jsonSerialize());
