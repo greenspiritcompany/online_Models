@@ -2,18 +2,45 @@
 namespace Telltale\Model;
 
 /**
-
+ * From the game_configurator table in the services database
+ * Allows users to configure their initial game state using node guids
+ *
  */
 class GameConfigurator extends Model {
 
+   /**
+   * Primary key of the auth users table
+   *
+   * @var int -
+   **/
   protected $user_id;
 
+  /**
+   * The game key. Known as the project name in the Tool
+   *
+   * @var string.
+  **/
   protected $game;
 
+  /**
+   * The node GUID in the dialogue tool
+   *
+   * @var string.
+  **/
   protected $node_guid;
 
+  /**
+   * The datetime when this user record was created
+   *
+   * @var datetime created_at
+   **/
   protected $created_at;
 
+  /**
+   * The datetime when this user record was last updated
+   *
+   * @var datetime|null updated_at
+   **/
   protected $updated_at;
 
   public function getUserId(): int {
@@ -52,7 +79,7 @@ class GameConfigurator extends Model {
   }
 
   /**
-   * Convenience function get get node uid
+   * Convenience function get node uid
    *
    * @return string
    */
