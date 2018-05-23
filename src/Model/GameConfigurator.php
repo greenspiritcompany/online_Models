@@ -79,7 +79,7 @@ class GameConfigurator extends Model {
   }
 
   /**
-   * Convenience function get node uid
+   * Convenience function to get node GUID
    *
    * @return string
    */
