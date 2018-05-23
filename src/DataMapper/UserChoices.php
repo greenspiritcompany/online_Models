@@ -10,8 +10,6 @@ use Aws\DynamoDb\Exception\DynamoDbException;
 use Telltale\DataMapper\ImportantEvents;
 use Telltale\DataMapper\ServicesAccount;
 use Telltale\DataMapper\ChoiceDocument;
-use Telltale\DataMapper\AWSKinesis;
-use Telltale\DataMapper\AWSDynamoDB;
 
 use Telltale\Model\ChoiceDocument as ChoiceDocumentModel;
 

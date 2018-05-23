@@ -178,7 +178,7 @@ class UserChoicesTest extends AbstractDBTest {
       // https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-dynamodb-2012-08-10.html#query
       public function query(array $dynamoDBQuery): array {
 
-        if ($dynamoDBQuery['TableName'] !== 'Important' . ucfirst(UserChoicesTest::GAME_NAME) . 'Events') {
+        if ($dynamoDBQuery['TableName'] !== 'PhpunitImportant' . ucfirst(UserChoicesTest::GAME_NAME) . 'Events') {
           throw new \Exception('dynamoDBQuery does not have expected table. Got: ' . $dynamoDBQuery['TableName']);
         }
 

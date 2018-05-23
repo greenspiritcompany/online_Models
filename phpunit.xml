@@ -15,5 +15,6 @@
         <const name="DBUNIT_DATABASE_MYSQL_DSN" value="mysql:host=mysql"/>
         <const name="DBUNIT_DATABASE_MYSQL_USERNAME" value="root"/>
         <const name="DBUNIT_DATABASE_MYSQL_PASSWORD" value="root"/>
+        <env name="ENV" value="phpunit"/>
     </php>
 </phpunit>
