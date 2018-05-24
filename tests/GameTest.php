@@ -56,16 +56,42 @@ class GameTest extends AbstractDBTest {
     ]);
   }
 
+  public function testExists() {
+    $gameQuery = new GameModel();
+    $gameQuery->setGame(self::GAME1);
+    $result = $this->game->exists($gameQuery);
+
+    $this->assertTrue($result);
+  }
+
+  public function testNotExists() {
+    $gameQuery = new GameModel();
+    $gameQuery->setGame(uniqid());
+    $gameQuery->setActive(true);
+    $result = $this->game->exists($gameQuery);
+
+    $this->assertFalse($result);
+  }
+
+  public function testNotExistsAsInactive() {
+    $gameQuery = new GameModel();
+    $gameQuery->setGame(self::GAME1);
+    $gameQuery->setActive(false);
+    $result = $this->game->exists($gameQuery);
+
+    $this->assertFalse($result);
+  }
+
   /**
    * Test should only return game1
    *
    * @return void
    */
-  public function testFetchAll() {
+  public function testFind() {
 
     $gameQuery = new GameModel();
     $gameQuery->setGame(self::GAME1);
-    $result = $this->game->fetchAll($gameQuery);
+    $result = $this->game->find($gameQuery);
 
     $this->assertNotFalse($result);
     $this->assertContainsOnlyInstancesOf(GameModel::class, $result);
@@ -89,14 +115,14 @@ class GameTest extends AbstractDBTest {
    * Expect an empty array
    *
    */
-  public function testFetchAllNoResult() {
+  public function testFindNoResult() {
     $gameQuery = new GameModel();
     $gameQuery->setId(4);
     $gameQuery->setGame('unknown');
     $gameQuery->setActive(false);
     $gameQuery->setCloudSync(false);
 
-    $result = $this->game->fetchAll($gameQuery);
+    $result = $this->game->find($gameQuery);
 
     $this->assertNotFalse($result);
     $this->assertCount(0, $result);
@@ -106,9 +132,9 @@ class GameTest extends AbstractDBTest {
    * Expect an empty array
    *
    */
-  public function testFetchAllNoResult2() {
+  public function testFindNoResult2() {
     $gameQuery = new GameModel();
-    $result = $this->game->fetchAll($gameQuery);
+    $result = $this->game->find($gameQuery);
     $this->assertNotFalse($result);
     $this->assertCount(0, $result);
   }
@@ -129,6 +155,16 @@ class GameTest extends AbstractDBTest {
       'active' => true,
       'cloudsync' => true,
     ], $result[0]->jsonSerialize());
+  }
+
+  // Deprecated method should return the same as find
+  public function testFetchAll() {
+    $gameQuery = new GameModel();
+    $gameQuery->setGame(self::GAME1);
+    $result1 = $this->game->find($gameQuery);
+    $result2 = $this->game->fetchAll($gameQuery);
+
+    $this->assertEquals($result1, $result2);
   }
 
   /**
