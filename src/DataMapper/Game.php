@@ -17,12 +17,12 @@ class Game {
   }
 
   /**
-   * Return all games matching the game query model
+   * Find games matching the query model
    *
    * @param GameModel $gameQuery
    * @return array
    */
-  public function fetchAll(GameModel $gameQuery) {
+  public function find(GameModel $gameQuery): array {
     $queryHelper = $gameQuery->queryHelper();
     if (!$queryHelper['keys']) {
       return [];
@@ -41,14 +41,48 @@ class Game {
   }
 
   /**
+   * Check that a game exists
+   *
+   * @param GameModel $gameQuery
+   * @return boolean
+   */
+  public function exists(GameModel $gameQuery):bool {
+    $queryHelper = $gameQuery->queryHelper();
+    if (!$queryHelper['keys']) {
+      return false;
+    }
+
+    $statement = $this->pdo->prepare(
+      'SELECT 1
+      FROM games
+      WHERE ' . implode(' = ? AND ', $queryHelper['keys']) . ' = ?
+      LIMIT 1'
+    );
+
+    $statement->execute($queryHelper['values']);
+    return $statement->fetchColumn() > 0;
+  }
+
+  /**
+   * Return all games matching the game query model
+   *
+   * @deprecated Replaced with find
+   * @param GameModel $gameQuery
+   * @return array
+   */
+  public function fetchAll(GameModel $gameQuery) {
+    return $this->find($gameQuery);
+  }
+
+  /**
    * Return all active games
    *
    * @return array
    */
   public function getAllActive() {
-    $statement = $this->pdo->query('SELECT id, game, display_name, active, cloudsync FROM games WHERE active = 1');
-    $statement->setFetchMode(PDO::FETCH_CLASS, GameModel::class);
-    return $statement->fetchAll();
+    $gameQuery = new GameModel();
+    $gameQuery->setActive(true);
+    return $this->find($gameQuery);
   }
 
   /**
@@ -58,7 +92,7 @@ class Game {
    * @return array
    */
   public function fetchValidGameList(GameModel $gameQuery = null): array {
-    $games = $gameQuery ? $this->fetchAll($gameQuery) : $this->getAllActive();
+    $games = $gameQuery ? $this->find($gameQuery) : $this->getAllActive();
 
     if (!$games) {
       return [];
@@ -76,7 +110,7 @@ class Game {
    * @return array
    */
   public function fetchGameIdToDisplayNameMapping(GameModel $gameQuery): array {
-    $games = $this->fetchAll($gameQuery);
+    $games = $this->find($gameQuery);
 
     if (!$games) {
       return [];
