@@ -41,14 +41,21 @@ class ImportantEvents {
       }
     }
 
-    if (is_null($list_of_valid_games)) {
+    $validGame = false;
+    $checkOwnGameList = !empty($list_of_valid_games);
+
+    if (!$checkOwnGameList) {
       $gameData = new Game($this->pdo, $this->cache);
       $gameQuery = new GameModel();
       $gameQuery->setGame($game);
-      $list_of_valid_games = $gameData->fetchValidGameList($gameQuery);
+      $validGame = $gameData->exists($gameQuery);
     }
 
-    if (!in_array($game, $list_of_valid_games)) {
+    if ($checkOwnGameList && in_array($game, $list_of_valid_games)) {
+      $validGame = true;
+    }
+
+    if (!$validGame) {
       throw new PDOException('Invalid game');
     }
 
