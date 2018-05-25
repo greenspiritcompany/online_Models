@@ -66,7 +66,7 @@ class Game {
   /**
    * Return all games matching the game query model
    *
-   * @depreciated
+   * @deprecated Replaced with find
    * @param GameModel $gameQuery
    * @return array
    */
