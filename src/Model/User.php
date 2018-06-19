@@ -11,7 +11,7 @@ class User extends Model {
   ];
   const PASSWORD_MIN = 6;
   const LEGAL_AGE = 18;
-  const UNDER_AGE = 12;
+  const UNDER_AGE = 15; // GDPR now requires minimum age of 16 (ONL-2717)
   const USERNAME_REGEX = '/^[\w\-]{5,24}$/';
 
   /**
