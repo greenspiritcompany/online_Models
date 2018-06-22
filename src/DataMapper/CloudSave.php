@@ -4,8 +4,11 @@ namespace Telltale\DataMapper;
 use PDO;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\NullLogger;
+
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Exception\DynamoDbException;
+use Aws\S3\S3Client;
+use Aws\S3\Exception\S3Exception;
 
 use Telltale\Model\User as UserModel;
 use Telltale\Model\Game as GameModel;
@@ -29,11 +32,15 @@ class CloudSave {
   public function __construct(PDO $pdo, CacheItemPoolInterface $cache = null, $logger = null) {
     $this->log = $logger ?? new NullLogger();
     $this->cache = $cache;
+    $this->s3 = new S3Client(self::AWS_CLIENT_CONFIG);
     $this->dynamoDB = new DynamoDbClient(self::AWS_CLIENT_CONFIG);
     $this->servicesAccount = new ServicesAccount($pdo, $cache);
 
     // When in development, query the staging dynamoDB
     $this->dynamoTable = (getenv('ENV') == 'development' ? 'Staging' : ucfirst(getenv('ENV'))) . 'CloudSync';
+
+    // Use the staging bucket for all environments except production
+    $this->s3Bucket = getenv('ENV') == 'production' ? 'cloud.telltalegames.com' : 'cloud-stage.telltalegames.com';
   }
 
   /**
@@ -101,6 +108,37 @@ class CloudSave {
     }
 
     $hasCloudSave = $dynamoDBResult->get('Count') == 1;
+
+    // Sadly we can't trust the dynamoDB result due to Cloud Save bugs in services.
+    // Verify that a save slot estore exists in s3.
+    try {
+      $hasCloudSaveStore = $this->s3->doesObjectExist($this->s3Bucket, $userPath . '/_saveslot1_id.estore');
+    } catch (S3Exception $e) {
+      $this->log->error('S3Exception: Failed to check if Cloud Save exists.', [
+        'AWSClientResponse' => $e->getMessage(),
+        'bucket' => $this->s3Bucket,
+        'userPath' => $userPath
+      ]);
+      return $hasCloudSave;
+    }
+
+    if ($hasCloudSave && !$hasCloudSaveStore) {
+      $this->log->warning('A Cloud Save was found in DynamoDB but no files exists in S3.', [
+        'game' => $game->getGame(),
+        'userID' => $user->getID(),
+        'servicesAccount' => $accountID
+      ]);
+      return false;
+    }
+
+    if (!$hasCloudSave && $hasCloudSaveStore) {
+      $this->log->warning('A Cloud Save was found S3 but no DynamoDB record exists.', [
+        'game' => $game->getGame(),
+        'userID' => $user->getID(),
+        'servicesAccount' => $accountID
+      ]);
+      return false;
+    }
 
     // Only cache success
     if ($this->cache && $hasCloudSave) {
