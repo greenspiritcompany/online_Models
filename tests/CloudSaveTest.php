@@ -12,7 +12,8 @@ class CloudSaveTest extends AbstractDBTest {
 
   const USER_ID = 210;
   const SERVICES_USER_ID = 200;
-  const GAME_NAME = 'phpunit_cloudsave_tests'; // determines important_events database name
+  const GAME_NAME = 'phpunitCloudsaveTest1';
+  const GAME_NAME_MISMATCH = 'phpunitCloudsaveTest2';
 
   private $cloudSave;
 
@@ -59,6 +60,7 @@ class CloudSaveTest extends AbstractDBTest {
 
     // Use reflection to mock the AwsClient
     $reflection = new \ReflectionClass($this->cloudSave);
+
     $dynamoDBProperty = $reflection->getProperty('dynamoDB');
     $dynamoDBProperty->setAccessible(true);
     $dynamoDBProperty->setValue($this->cloudSave, new class() {
@@ -79,6 +81,13 @@ class CloudSaveTest extends AbstractDBTest {
             ]);
           }
 
+          // Dynamo can sometimes return a result when there is no cloud save file in S3
+          if ($userPath == CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_MISMATCH . '/shared/cloud_save_slot_location') {
+            return new AwsResult([
+              'Count' => 1
+            ]);
+          }
+
           return new AwsResult([
             'Count' => 0
           ]);
@@ -88,6 +97,23 @@ class CloudSaveTest extends AbstractDBTest {
       }
     });
 
+    $s3Property = $reflection->getProperty('s3');
+    $s3Property->setAccessible(true);
+    $s3Property->setValue($this->cloudSave, new class() {
+      // https://docs.aws.amazon.com/aws-sdk-php/v3/api/class-Aws.S3.S3ClientInterface.html#_doesObjectExist
+      public function doesObjectExist(string $bucket, string $key, array $options = []): bool {
+
+        if ($bucket !== 'cloud-stage.telltalegames.com') {
+          throw new \Exception('Unexpected bucket name. Got: ' . $bucket);
+        }
+
+        if ($key == CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/shared/cloud_save_slot_location/_saveslot1_id.estore') {
+          return true;
+        }
+
+        return false;
+      }
+    });
   }
 
   protected function getDataSet() {
@@ -136,6 +162,19 @@ class CloudSaveTest extends AbstractDBTest {
 
     $game = new GameModel();
     $game->setGame(self::GAME_NAME);
+    $game->setCloudSync(true);
+
+    $result = $this->cloudSave->exists($user, $game);
+
+    $this->assertFalse($result);
+  }
+
+  public function testNotExistsInS3() {
+    $user = new UserModel();
+    $user->setId(self::USER_ID);
+
+    $game = new GameModel();
+    $game->setGame(self::GAME_NAME_MISMATCH);
     $game->setCloudSync(true);
 
     $result = $this->cloudSave->exists($user, $game);

@@ -25,6 +25,7 @@ class CloudSave {
 
   private $log;
   private $cache;
+  private $s3;
   private $dynamoDB;
   private $servicesAccount;
   private $dynamoTable;
