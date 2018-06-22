@@ -119,7 +119,7 @@ class CloudSave {
         'bucket' => $this->s3Bucket,
         'userPath' => $userPath
       ]);
-      return $hasCloudSave;
+      return false;
     }
 
     if ($hasCloudSave && !$hasCloudSaveStore) {
@@ -132,7 +132,7 @@ class CloudSave {
     }
 
     if (!$hasCloudSave && $hasCloudSaveStore) {
-      $this->log->warning('A Cloud Save was found S3 but no DynamoDB record exists.', [
+      $this->log->warning('A Cloud Save was found in S3 but no DynamoDB record exists.', [
         'game' => $game->getGame(),
         'userID' => $user->getID(),
         'servicesAccount' => $accountID
