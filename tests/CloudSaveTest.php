@@ -100,18 +100,26 @@ class CloudSaveTest extends AbstractDBTest {
     $s3Property = $reflection->getProperty('s3');
     $s3Property->setAccessible(true);
     $s3Property->setValue($this->cloudSave, new class() {
-      // https://docs.aws.amazon.com/aws-sdk-php/v3/api/class-Aws.S3.S3ClientInterface.html#_doesObjectExist
-      public function doesObjectExist(string $bucket, string $key, array $options = []): bool {
+      // https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-s3-2006-03-01.html#listobjectsv2
+      public function listObjectsV2(array $parameters): AwsResult {
 
-        if ($bucket !== 'cloud-stage.telltalegames.com') {
+        if ($parameters['Bucket'] !== 'cloud-stage.telltalegames.com') {
           throw new \Exception('Unexpected bucket name. Got: ' . $bucket);
         }
 
-        if ($key == CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/shared/cloud_save_slot_location/_saveslot1_id.estore') {
-          return true;
+        if ($parameters['Prefix'] == CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/') {
+          return new AwsResult([
+            'KeyCount' => 1,
+            'CommonPrefixes' => [
+              'Prefix' => CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/php-unit/1.0.0.1' . $parameters['Delimiter']
+            ]
+          ]);
         }
 
-        return false;
+        return new AwsResult([
+          'KeyCount' => 0
+        ]);
+
       }
     });
   }
