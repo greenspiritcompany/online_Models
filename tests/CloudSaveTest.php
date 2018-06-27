@@ -104,7 +104,7 @@ class CloudSaveTest extends AbstractDBTest {
       public function listObjectsV2(array $parameters): AwsResult {
 
         if ($parameters['Bucket'] !== 'cloud-stage.telltalegames.com') {
-          throw new \Exception('Unexpected bucket name. Got: ' . $bucket);
+          throw new \Exception('Unexpected bucket name. Got: ' . $parameters['Bucket']);
         }
 
         if ($parameters['Prefix'] == CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/') {
