@@ -110,10 +110,19 @@ class CloudSave {
 
     $hasCloudSave = $dynamoDBResult->get('Count') == 1;
 
-    // Sadly we can't trust the dynamoDB result due to Cloud Save bugs in services.
-    // Verify that a save slot estore exists in s3.
+     // Sadly we can't trust the dynamoDB result due to Cloud Save bugs in services.
+
+     // Scan a user's cloud save location on S3 to find if there is a `_saveslot1_id.estore` in the `{platform}/{version}/cloud_save_choices` subdirectory.
     try {
-      $hasCloudSaveStore = $this->s3->doesObjectExist($this->s3Bucket, $userPath . '/_saveslot1_id.estore');
+      $foundSaveObjects = $this->s3->listObjectsV2([
+        'Bucket' => $this->s3Bucket,
+        'MaxKeys' => 100,
+        'Prefix' => $accountID . '/' . $game->getGame() . '/',
+        'Delimiter' => '/cloud_save_choices/_saveslot1_id.estore'
+      ]);
+
+      $hasCloudSaveStore = !empty($foundSaveObjects->get('CommonPrefixes'));
+
     } catch (S3Exception $e) {
       $this->log->error('S3Exception: Failed to check if Cloud Save exists.', [
         'AWSClientResponse' => $e->getMessage(),
