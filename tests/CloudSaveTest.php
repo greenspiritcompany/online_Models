@@ -14,6 +14,8 @@ class CloudSaveTest extends AbstractDBTest {
   const SERVICES_USER_ID = 200;
   const GAME_NAME = 'phpunitCloudsaveTest1';
   const GAME_NAME_MISMATCH = 'phpunitCloudsaveTest2';
+  const GAME_NAME_XBONE = 'gamePlayedOnXbone';
+  const GAME_NAME_PS3 = 'gamePlayedOnPS3';
 
   private $cloudSave;
 
@@ -75,14 +77,14 @@ class CloudSaveTest extends AbstractDBTest {
 
           $userPath = $dynamoDBQuery['KeyConditions']['userpath']['AttributeValueList'][0]['S'];
 
-          if ($userPath == CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/shared/cloud_save_slot_location') {
-            return new AwsResult([
-              'Count' => 1
-            ]);
-          }
+          $allowedPaths = [
+            CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/shared/cloud_save_slot_location',
+            CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_MISMATCH . '/shared/cloud_save_slot_location',
+            CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_XBONE . '/shared/cloud_save_slot_location',
+            CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_PS3 . '/shared/cloud_save_slot_location',
+          ];
 
-          // Dynamo can sometimes return a result when there is no cloud save file in S3
-          if ($userPath == CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_MISMATCH . '/shared/cloud_save_slot_location') {
+          if (in_array($userPath, $allowedPaths)) {
             return new AwsResult([
               'Count' => 1
             ]);
@@ -100,18 +102,45 @@ class CloudSaveTest extends AbstractDBTest {
     $s3Property = $reflection->getProperty('s3');
     $s3Property->setAccessible(true);
     $s3Property->setValue($this->cloudSave, new class() {
-      // https://docs.aws.amazon.com/aws-sdk-php/v3/api/class-Aws.S3.S3ClientInterface.html#_doesObjectExist
-      public function doesObjectExist(string $bucket, string $key, array $options = []): bool {
+      // https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-s3-2006-03-01.html#listobjectsv2
+      public function listObjectsV2(array $parameters): AwsResult {
 
-        if ($bucket !== 'cloud-stage.telltalegames.com') {
-          throw new \Exception('Unexpected bucket name. Got: ' . $bucket);
+        if ($parameters['Bucket'] !== 'cloud-stage.telltalegames.com') {
+          throw new \Exception('Unexpected bucket name. Got: ' . $parameters['Bucket']);
         }
 
-        if ($key == CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/shared/cloud_save_slot_location/_saveslot1_id.estore') {
-          return true;
+        if ($parameters['Prefix'] == CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/') {
+          return new AwsResult([
+            'KeyCount' => 1,
+            'CommonPrefixes' => [
+              'Prefix' => CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/php-unit/1.0.0.1' . $parameters['Delimiter']
+            ]
+          ]);
         }
 
-        return false;
+        if ($parameters['Prefix'] == CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_XBONE . '/') {
+          return new AwsResult([
+            'KeyCount' => 2,
+            'CommonPrefixes' => [
+              'Prefix' => CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_XBONE . '/xbone/1.0.0.1' . $parameters['Delimiter'],
+              'Prefix' => CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_XBONE . '/xbox/1.0.0.1' . $parameters['Delimiter']
+            ]
+          ]);
+        }
+
+        if ($parameters['Prefix'] == CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_PS3 . '/') {
+          return new AwsResult([
+            'KeyCount' => 1,
+            'CommonPrefixes' => [
+              'Prefix' => CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_PS3 . '/ps3/1.0.0.1' . $parameters['Delimiter']
+            ]
+          ]);
+        }
+
+        return new AwsResult([
+          'KeyCount' => 0
+        ]);
+
       }
     });
   }
@@ -207,6 +236,54 @@ class CloudSaveTest extends AbstractDBTest {
     $game->setGame('invalidGame');
 
     $result = $this->cloudSave->exists($user, $game);
+  }
+
+  public function testTransferableFromXbone() {
+
+    $user = new UserModel();
+    $user->setId(self::USER_ID);
+
+    $game = new GameModel();
+    $game->setGame(self::GAME_NAME_XBONE);
+    $game->setCloudSync(true);
+
+    // Ok from Xbox to Nintendo
+    $nxResult = $this->cloudSave->transferable($user, $game, 'nx');
+    $this->assertTrue($nxResult);
+
+    // Ok from Xbox to PC
+    $pcResult = $this->cloudSave->transferable($user, $game, 'pc');
+    $this->assertTrue($pcResult);
+
+    // Cannot transfer from Xbox to Sony
+    $ps4Result = $this->cloudSave->transferable($user, $game, 'ps4');
+    $this->assertFalse($ps4Result);
+  }
+
+  public function testTransferableFromPS3() {
+
+    $user = new UserModel();
+    $user->setId(self::USER_ID);
+
+    $game = new GameModel();
+    $game->setGame(self::GAME_NAME_PS3);
+    $game->setCloudSync(true);
+
+    // Cannot transfer from Sony to Nintendo
+    $nxResult = $this->cloudSave->transferable($user, $game, 'nx');
+    $this->assertFalse($nxResult);
+
+    // Ok from Sony to PC
+    $pcResult = $this->cloudSave->transferable($user, $game, 'pc');
+    $this->assertTrue($pcResult);
+
+    // Ok from PS3 to PS4
+    $ps4Result = $this->cloudSave->transferable($user, $game, 'ps4');
+    $this->assertTrue($ps4Result);
+
+    // Cannot transfer from Sony to Xbone
+    $xboneResult = $this->cloudSave->transferable($user, $game, 'xbone');
+    $this->assertFalse($xboneResult);
   }
 
 }

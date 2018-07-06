@@ -12,6 +12,7 @@ use Aws\S3\Exception\S3Exception;
 
 use Telltale\Model\User as UserModel;
 use Telltale\Model\Game as GameModel;
+use Telltale\Model\ServicesAccount as ServicesAccountModel;
 
 use Telltale\DataMapper\ServicesAccount;
 
@@ -39,9 +40,6 @@ class CloudSave {
 
     // When in development, query the staging dynamoDB
     $this->dynamoTable = (getenv('ENV') == 'development' ? 'Staging' : ucfirst(getenv('ENV'))) . 'CloudSync';
-
-    // Use the staging bucket for all environments except production
-    $this->s3Bucket = getenv('ENV') == 'production' ? 'cloud.telltalegames.com' : 'cloud-stage.telltalegames.com';
   }
 
   /**
@@ -59,7 +57,7 @@ class CloudSave {
 
     if ($this->cache) {
       $cacheKey = [
-        $this->dynamoTable,
+        'CloudSync',
         $user->getID(),
         $game->getGame(),
         'Exists'
@@ -110,18 +108,8 @@ class CloudSave {
 
     $hasCloudSave = $dynamoDBResult->get('Count') == 1;
 
-    // Sadly we can't trust the dynamoDB result due to Cloud Save bugs in services.
-    // Verify that a save slot estore exists in s3.
-    try {
-      $hasCloudSaveStore = $this->s3->doesObjectExist($this->s3Bucket, $userPath . '/_saveslot1_id.estore');
-    } catch (S3Exception $e) {
-      $this->log->error('S3Exception: Failed to check if Cloud Save exists.', [
-        'AWSClientResponse' => $e->getMessage(),
-        'bucket' => $this->s3Bucket,
-        'userPath' => $userPath
-      ]);
-      return false;
-    }
+     // Sadly we can't trust the dynamoDB result due to Cloud Save bugs in services. Dynamo must continue to be checked because that's what Services does too.
+    $hasCloudSaveStore = !empty($this->getCloudSaveStore($accountID, $game->getGame()));
 
     if ($hasCloudSave && !$hasCloudSaveStore) {
       $this->log->warning('A Cloud Save was found in DynamoDB but no files exists in S3.', [
@@ -152,6 +140,97 @@ class CloudSave {
     }
 
     return $hasCloudSave;
+  }
+
+  /**
+   * Can the $user's cloud save be transferred to $platform?
+   *
+   * @param UserModel $user
+   * @param GameModel $game
+   * @param string $platform Name of the requesting platform that wants to import the save files
+   * @return boolean
+   */
+  public function transferable(UserModel $user, GameModel $game, string $platform): bool {
+
+    if (!$this->exists($user, $game)) {
+      return false;
+    }
+
+    $accountID = $this->servicesAccount->getIdFromAuthId($user->getID());
+
+    $cloudSaveStore = $this->getCloudSaveStore($accountID, $game->getGame());
+
+    if (empty($cloudSaveStore)) {
+      return false;
+    }
+
+    // PS4 is not allowed to import from Xbox, Xbone, win10, or NX
+    if (strpos($platform, 'ps4') === 0) {
+      return array_reduce($cloudSaveStore, function(bool $result, string $item) {
+        return $result && str_replace(['/xbox/', '/xbone/', '/win10/', '/nx/'], '', $item) === $item;
+      }, true);
+    }
+
+    // Only PC is allowed import from ps3 and ps4 cloud saves
+    if (!(strpos($platform, 'pc') === 0)) {
+      return array_reduce($cloudSaveStore, function(bool $result, string $item) {
+        return $result && str_replace(['/ps3/', '/ps4/'], '', $item) === $item;
+      }, true);
+    }
+
+    return true;
+  }
+
+  /**
+   * Scan a user's cloud save location on S3 to get the location of `_saveslot1_id.estore`
+   * in the `{platform}/{version}/cloud_save_choices` subdirectory.
+   *
+   * @param ServicesAccountModel $account
+   * @param GameModel $game
+   * @return array
+   */
+  private function getCloudSaveStore(int $servicesAccountId, string $gameDirectory): array {
+
+    if ($this->cache) {
+      $cacheKey = [
+        'CloudSaveStore',
+        $servicesAccountId,
+        $gameDirectory
+      ];
+
+      $cacheItem = $this->cache->getItem(implode('|', $cacheKey));
+
+      if ($cacheItem->isHit()) {
+        return $cacheItem->get() ?? [];
+      }
+    }
+
+    $s3Parameters = [
+      'Bucket' => getenv('ENV') == 'production' ? 'cloud.telltalegames.com' : 'cloud-stage.telltalegames.com',
+      'MaxKeys' => 100,
+      'Prefix' => $servicesAccountId . '/' . $gameDirectory . '/',
+      'Delimiter' => '/cloud_save_choices/_saveslot1_id.estore'
+    ];
+
+    try {
+      $foundSaveObjects = $this->s3->listObjectsV2($s3Parameters);
+    } catch (S3Exception $e) {
+      $this->log->error('S3Exception: Failed to check if Cloud Save exists.', array_merge([
+        'AWSClientResponse' => $e->getMessage()
+      ], $s3Parameters));
+      return [];
+    }
+
+    $cloudSaveStore = $foundSaveObjects->get('CommonPrefixes');
+
+    if ($this->cache) {
+      $cacheItem->expiresAfter(180); // 3 minutes
+      // Save into cache
+      $cacheItem->set($cloudSaveStore);
+      $this->cache->save($cacheItem);
+    }
+
+    return $cloudSaveStore ?? [];
   }
 
 }
