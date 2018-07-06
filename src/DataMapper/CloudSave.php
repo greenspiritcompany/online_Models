@@ -171,15 +171,15 @@ class CloudSave {
 
     // PS4 is not allowed to transfer saves from Xbox, Xbone, win10, or NX
     if ($platform == 'ps4') {
-      return array_reduce($cloudSaveStore, function(bool $result, string $item) {
-        return $result && str_replace(['/xbox/', '/xbone/', '/win10/', '/nx/'], '', $item) === $item;
+      return array_reduce($cloudSaveStore, function(bool $result, array $item) {
+        return $result && str_replace(['/xbox/', '/xbone/', '/win10/', '/nx/'], '', $item['Prefix']) === $item['Prefix'];
       }, true);
     }
 
     // Only pc (and pc-steam etc) is allowed to transfer saves from ps3 and ps4 cloud saves
     if (!(strpos($platform, 'pc') === 0)) {
-      return array_reduce($cloudSaveStore, function(bool $result, string $item) {
-        return $result && str_replace(['/ps3/', '/ps4/'], '', $item) === $item;
+      return array_reduce($cloudSaveStore, function(bool $result, array $item) {
+        return $result && str_replace(['/ps3/', '/ps4/'], '', $item['Prefix']) === $item['Prefix'];
       }, true);
     }
 

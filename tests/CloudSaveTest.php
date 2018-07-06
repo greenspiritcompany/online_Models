@@ -113,7 +113,7 @@ class CloudSaveTest extends AbstractDBTest {
           return new AwsResult([
             'KeyCount' => 1,
             'CommonPrefixes' => [
-              'Prefix' => CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/php-unit/1.0.0.1' . $parameters['Delimiter']
+              ['Prefix' => CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/php-unit/1.0.0.1' . $parameters['Delimiter']]
             ]
           ]);
         }
@@ -122,8 +122,8 @@ class CloudSaveTest extends AbstractDBTest {
           return new AwsResult([
             'KeyCount' => 2,
             'CommonPrefixes' => [
-              'Prefix' => CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_XBONE . '/xbone/1.0.0.1' . $parameters['Delimiter'],
-              'Prefix' => CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_XBONE . '/xbox/1.0.0.1' . $parameters['Delimiter']
+              ['Prefix' => CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_XBONE . '/xbone/1.0.0.1' . $parameters['Delimiter']],
+              ['Prefix' => CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_XBONE . '/xbox/1.0.0.1' . $parameters['Delimiter']]
             ]
           ]);
         }
@@ -132,7 +132,7 @@ class CloudSaveTest extends AbstractDBTest {
           return new AwsResult([
             'KeyCount' => 1,
             'CommonPrefixes' => [
-              'Prefix' => CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_PS3 . '/ps3/1.0.0.1' . $parameters['Delimiter']
+              ['Prefix' => CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_PS3 . '/ps3/1.0.0.1' . $parameters['Delimiter']]
             ]
           ]);
         }
