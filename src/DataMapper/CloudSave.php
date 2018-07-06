@@ -164,10 +164,10 @@ class CloudSave {
       return false;
     }
 
-    // PS4 is not allowed to import from Xbox, Xbone or NX
+    // PS4 is not allowed to import from Xbox, Xbone, win10, or NX
     if (strpos($platform, 'ps4') === 0) {
       return array_reduce($cloudSaveStore, function(bool $result, string $item) {
-        return $result && str_replace(['/xbox/', '/xbone/', '/nx/'], '', $item) === $item;
+        return $result && str_replace(['/xbox/', '/xbone/', '/win10/', '/nx/'], '', $item) === $item;
       }, true);
     }
 
