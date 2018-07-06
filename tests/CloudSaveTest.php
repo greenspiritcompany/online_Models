@@ -277,9 +277,17 @@ class CloudSaveTest extends AbstractDBTest {
     $pcResult = $this->cloudSave->transferable($user, $game, 'pc');
     $this->assertTrue($pcResult);
 
+    // Ok from Sony to Steam
+    $steamResult = $this->cloudSave->transferable($user, $game, 'pc-steam');
+    $this->assertTrue($steamResult);
+
     // Ok from PS3 to PS4
     $ps4Result = $this->cloudSave->transferable($user, $game, 'ps4');
     $this->assertTrue($ps4Result);
+
+    // Ok from PS3 to Tool
+    $toolResult = $this->cloudSave->transferable($user, $game, 'tool');
+    $this->assertTrue($toolResult);
 
     // Cannot transfer from Sony to Xbone
     $xboneResult = $this->cloudSave->transferable($user, $game, 'xbone');
