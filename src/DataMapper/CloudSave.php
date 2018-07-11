@@ -25,9 +25,7 @@ class CloudSave {
   private $log;
   private $cache;
   private $s3;
-  private $dynamoDB;
   private $servicesAccount;
-  private $dynamoTable;
 
   public function __construct(PDO $pdo, CacheItemPoolInterface $cache = null, $logger = null) {
     $this->log = $logger ?? new NullLogger();
