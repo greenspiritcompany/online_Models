@@ -63,42 +63,6 @@ class CloudSaveTest extends AbstractDBTest {
     // Use reflection to mock the AwsClient
     $reflection = new \ReflectionClass($this->cloudSave);
 
-    $dynamoDBProperty = $reflection->getProperty('dynamoDB');
-    $dynamoDBProperty->setAccessible(true);
-    $dynamoDBProperty->setValue($this->cloudSave, new class() {
-      // https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-dynamodb-2012-08-10.html#query
-      public function query(array $dynamoDBQuery): AwsResult {
-
-        if ($dynamoDBQuery['TableName'] !== 'PhpunitCloudSync') {
-          throw new \Exception('dynamoDBQuery does not have expected table. Got: ' . $dynamoDBQuery['TableName']);
-        }
-
-        if ($dynamoDBQuery['Select'] == 'COUNT' && $dynamoDBQuery['Limit'] == 1) {
-
-          $userPath = $dynamoDBQuery['KeyConditions']['userpath']['AttributeValueList'][0]['S'];
-
-          $allowedPaths = [
-            CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/shared/cloud_save_slot_location',
-            CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_MISMATCH . '/shared/cloud_save_slot_location',
-            CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_XBONE . '/shared/cloud_save_slot_location',
-            CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME_PS3 . '/shared/cloud_save_slot_location',
-          ];
-
-          if (in_array($userPath, $allowedPaths)) {
-            return new AwsResult([
-              'Count' => 1
-            ]);
-          }
-
-          return new AwsResult([
-            'Count' => 0
-          ]);
-        }
-
-        return new AwsResult();
-      }
-    });
-
     $s3Property = $reflection->getProperty('s3');
     $s3Property->setAccessible(true);
     $s3Property->setValue($this->cloudSave, new class() {
