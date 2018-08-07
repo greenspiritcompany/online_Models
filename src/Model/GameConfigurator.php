@@ -57,6 +57,11 @@ class GameConfigurator extends Model {
   }
 
   public function setGame(string $game): self {
+
+    if (!empty($game) && !ctype_alnum($game)) {
+      throw new \InvalidArgumentException('Game must be alphanumeric.', 400);
+    }
+
     $this->updateField('game', $game);
     return $this;
   }
