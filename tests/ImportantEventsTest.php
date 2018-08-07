@@ -6,8 +6,6 @@ use Telltale\Model\ImportantEvents as ImportantEventsModel;
 
 class ImportantEventsTest extends AbstractDBTest {
 
-  const GAME_NAME = 'phpunit_model_tests'; // determines important_events database name
-
   const EVENTS_DATASET = [
     [
       'purpose' => 'tracker',
@@ -15,7 +13,7 @@ class ImportantEventsTest extends AbstractDBTest {
       'int_event_type' => '2500895281066692154',
       'event_value' => '1',
       'b64_event_value' => '1',
-      'cohort_name' => 'phpunit_model_tests_Start_All',
+      'cohort_name' => 'phpunit_Start_All',
       'created_at' => '2016-07-12 17:39:53',
     ],
     [
@@ -112,7 +110,8 @@ class ImportantEventsTest extends AbstractDBTest {
       'games' => [
         [
           //'id' => 1,
-          'game' => self::GAME_NAME,
+          // Game ID must be the same as the DB due to game.important_events
+          'game' => DBUNIT_DATABASE_MYSQL_NAME,
           'display_name' => 'Unit Test Game',
           'active' => 1,
           'cloudsync' => 0
@@ -122,7 +121,7 @@ class ImportantEventsTest extends AbstractDBTest {
   }
 
   public function testFetchAll() {
-    $result = $this->importantEvents->fetchAll(self::GAME_NAME);
+    $result = $this->importantEvents->fetchAll(DBUNIT_DATABASE_MYSQL_NAME);
 
     $this->assertContainsOnlyInstancesOf(ImportantEventsModel::class, $result);
     $this->assertInternalType('array', $result);
@@ -142,7 +141,7 @@ class ImportantEventsTest extends AbstractDBTest {
   }
 
   public function testFetchAllValidGameList() {
-    $result = $this->importantEvents->fetchAll(self::GAME_NAME, [self::GAME_NAME]);
+    $result = $this->importantEvents->fetchAll(DBUNIT_DATABASE_MYSQL_NAME, [DBUNIT_DATABASE_MYSQL_NAME]);
 
     $this->assertContainsOnlyInstancesOf(ImportantEventsModel::class, $result);
     $this->assertInternalType('array', $result);
@@ -156,7 +155,7 @@ class ImportantEventsTest extends AbstractDBTest {
    * @expectedExceptionMessage Invalid game
    */
   public function testFetchInvalidGame() {
-    $result = $this->importantEvents->fetchAll('invalid-game');
+    $result = $this->importantEvents->fetchAll('invalid');
     $this->assertCount(0, $result); // out of 7 in dataset
   }
 
@@ -167,12 +166,12 @@ class ImportantEventsTest extends AbstractDBTest {
    * @expectedExceptionMessage Invalid game
    */
   public function testFetchInvalidGameInList() {
-    $result = $this->importantEvents->fetchAll('invalid-game', ['not-invalid-game']);
+    $result = $this->importantEvents->fetchAll('invalid', ['example']);
     $this->assertCount(0, $result); // out of 7 in dataset
   }
 
   public function testFetchSymbolDictionary() {
-    $result = $this->importantEvents->fetchSymbolDictionary(self::GAME_NAME);
+    $result = $this->importantEvents->fetchSymbolDictionary(DBUNIT_DATABASE_MYSQL_NAME);
     $this->assertInternalType('array', $result);
     $this->assertCount(3, $result);
 
@@ -185,7 +184,7 @@ class ImportantEventsTest extends AbstractDBTest {
   }
 
   public function testFetchSymbolDictionaryWhitelist() {
-    $result = $this->importantEvents->fetchSymbolDictionary(self::GAME_NAME, [self::GAME_NAME]);
+    $result = $this->importantEvents->fetchSymbolDictionary(DBUNIT_DATABASE_MYSQL_NAME, [DBUNIT_DATABASE_MYSQL_NAME]);
     $this->assertInternalType('array', $result);
     $this->assertCount(3, $result);
 
@@ -215,7 +214,7 @@ class ImportantEventsTest extends AbstractDBTest {
    * @expectedExceptionMessage Invalid game
    */
   public function testFetchSymbolDictionaryGameNotInWhiteList() {
-    $result = $this->importantEvents->fetchSymbolDictionary('game-name', ['not-game-name']);
+    $result = $this->importantEvents->fetchSymbolDictionary('gameName', ['notGameName']);
     $this->assertCount(0, $result);
   }
 

@@ -15,7 +15,7 @@ class UserChoicesTest extends AbstractDBTest {
   const VALID_ACCESS_POINT = 1337;
   const ACCESS_POINT_N0_MATCHES = 41453;
   const ACCESS_POINT_BAD_DATA = 41454;
-  const GAME_NAME = 'phpunit_model_tests'; // determines important_events database name
+  const GAME_NAME = DBUNIT_DATABASE_MYSQL_NAME; // determines important_events database name
   const CHOICE_DOC_TYPE = 'stats_extended';
 
   private $userChoices;
@@ -105,7 +105,7 @@ class UserChoicesTest extends AbstractDBTest {
 
       public function getItem($key) {
 
-        if ($key == "|PHPUnitNamespace|CloudSaveChoiceData|100|phpunit_model_tests") {
+        if ($key == "|PHPUnitNamespace|CloudSaveChoiceData|100|phpunit") {
           // This cache result would be populated from kinesis
           return $this->buildItem($key, true, json_encode([
             'matches' => [
@@ -116,14 +116,14 @@ class UserChoicesTest extends AbstractDBTest {
           ]));
         }
 
-        if ($key == "|PHPUnitNoMatch|CloudSaveChoiceData|100|phpunit_model_tests") {
+        if ($key == "|PHPUnitNoMatch|CloudSaveChoiceData|100|phpunit") {
           return $this->buildItem($key, true, json_encode([
             'matches' => [],
           ]));
         }
 
         // pendingCacheMessage we put in cache has not been replaced by the above kinesis responses yet
-        if ($key == "|PHPUnitWaiting|CloudSaveChoiceData|100|phpunit_model_tests") {
+        if ($key == "|PHPUnitWaiting|CloudSaveChoiceData|100|phpunit") {
           return $this->buildItem($key, true, json_encode([
             'status' => 'pending',
             'datetime' => date('Y-m-d H:i:s')

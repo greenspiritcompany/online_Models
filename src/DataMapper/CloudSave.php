@@ -15,6 +15,13 @@ use Telltale\Model\CloudSave as CloudSaveModel;
 
 use Telltale\DataMapper\ServicesAccount;
 
+/**
+ * Retrieves info on Cloud Save Choices
+ *
+ * Note:
+ * While this class is called CloudSave it currently only queries Cloud Save Choices which cannot be regarded as a complete cloud save.
+ *
+ */
 class CloudSave {
 
   // AWS region where the Cloud Save data is stored
@@ -193,6 +200,7 @@ class CloudSave {
   /**
    * Scan a user's cloud save location on S3 to get the location of `_saveslot1_id.estore`
    * in the `{platform}/{version}/cloud_save_choices` subdirectory.
+   * Note: At this time we only get cloud_save_choices which technically isn't a Cloud Save
    *
    * @param ServicesAccountModel $account
    * @param GameModel $game
@@ -214,6 +222,8 @@ class CloudSave {
       }
     }
 
+    $delimiter = '/cloud_save_choices/_saveslot1_id.estore';
+
     $prefix = $servicesAccountId . '/';
 
     if ($gameDirectory !== 'all') {
@@ -224,7 +234,7 @@ class CloudSave {
       'Bucket' => getenv('ENV') == 'production' ? 'cloud.telltalegames.com' : 'cloud-stage.telltalegames.com',
       'MaxKeys' => 100,
       'Prefix' => $prefix,
-      'Delimiter' => '/cloud_save_choices/_saveslot1_id.estore'
+      'Delimiter' => $delimiter
     ];
 
     try {
