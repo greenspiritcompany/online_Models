@@ -11,9 +11,17 @@ use Aws\S3\Exception\S3Exception;
 use Telltale\Model\User as UserModel;
 use Telltale\Model\Game as GameModel;
 use Telltale\Model\ServicesAccount as ServicesAccountModel;
+use Telltale\Model\CloudSave as CloudSaveModel;
 
 use Telltale\DataMapper\ServicesAccount;
 
+/**
+ * Retrieves info on Cloud Save Choices
+ *
+ * Note:
+ * While this class is called CloudSave it currently only queries Cloud Save Choices which cannot be regarded as a complete cloud save.
+ *
+ */
 class CloudSave {
 
   // AWS region where the Cloud Save data is stored
@@ -32,6 +40,64 @@ class CloudSave {
     $this->cache = $cache;
     $this->s3 = new S3Client(self::AWS_CLIENT_CONFIG);
     $this->servicesAccount = new ServicesAccount($pdo, $cache);
+  }
+
+  /**
+   * Find all the CloudSaves for a given user / game
+   * Note: At this time results are limited to the first 100 results of cloud_save_choices
+   *
+   * @param UserModel $user
+   * @param GameModel $game
+   * @return array
+   */
+  public function find(UserModel $user, GameModel $game = null): array {
+
+    if ($game && !$game->getCloudsync()) {
+      throw new \UnexpectedValueException('Game does not support Cloud Saves', 400);
+    }
+
+    $gameID = $game ? $game->getGame() : 'all';
+
+    if ($this->cache) {
+      $cacheKey = [
+        'CloudSync',
+        $user->getID(),
+        $gameID
+      ];
+
+      $cacheItem = $this->cache->getItem(implode('|', $cacheKey));
+
+      if ($cacheItem->isHit()) {
+        return $cacheItem->get();
+      }
+    }
+
+    // At this time Cloud Saves are tied to a user's services account instead of user ID
+    $accountID = $this->servicesAccount->getIdFromAuthId($user->getID());
+
+    if (!$accountID) {
+      $this->log->warning('Cloud Save user has no services account.', [
+        'userID' => $user->getID()
+      ]);
+      return [];
+    }
+
+    $cloudSaves = array_map(function(array $cloudSave) {
+      return new CloudSaveModel($cloudSave['Prefix']);
+    }, $this->getCloudSaveStore($accountID, $gameID));
+
+
+    // Only cache success
+    if ($this->cache && $cloudSaves) {
+      $cacheItem->set($cloudSaves);
+
+      // Cache for 1 hour
+      $exp = new \DateInterval('PT1H');
+      $cacheItem->expiresAfter($exp);
+      $this->cache->save($cacheItem);
+    }
+
+    return $cloudSaves;
   }
 
   /**
@@ -134,12 +200,13 @@ class CloudSave {
   /**
    * Scan a user's cloud save location on S3 to get the location of `_saveslot1_id.estore`
    * in the `{platform}/{version}/cloud_save_choices` subdirectory.
+   * Note: At this time we only get cloud_save_choices which technically isn't a Cloud Save
    *
    * @param ServicesAccountModel $account
    * @param GameModel $game
    * @return array
    */
-  private function getCloudSaveStore(int $servicesAccountId, string $gameDirectory): array {
+  private function getCloudSaveStore(int $servicesAccountId, string $gameDirectory = 'all'): array {
 
     if ($this->cache) {
       $cacheKey = [
@@ -155,11 +222,19 @@ class CloudSave {
       }
     }
 
+    $delimiter = '/cloud_save_choices/_saveslot1_id.estore';
+
+    $prefix = $servicesAccountId . '/';
+
+    if ($gameDirectory !== 'all') {
+      $prefix .= $gameDirectory . '/';
+    }
+
     $s3Parameters = [
       'Bucket' => getenv('ENV') == 'production' ? 'cloud.telltalegames.com' : 'cloud-stage.telltalegames.com',
       'MaxKeys' => 100,
-      'Prefix' => $servicesAccountId . '/' . $gameDirectory . '/',
-      'Delimiter' => '/cloud_save_choices/_saveslot1_id.estore'
+      'Prefix' => $prefix,
+      'Delimiter' => $delimiter
     ];
 
     try {

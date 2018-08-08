@@ -5,6 +5,7 @@ use Telltale\DataMapper\CloudSave;
 
 use Telltale\Model\User as UserModel;
 use Telltale\Model\Game as GameModel;
+use Telltale\Model\CloudSave as CloudSaveModel;
 
 use Aws\Result as AwsResult;
 
@@ -101,6 +102,17 @@ class CloudSaveTest extends AbstractDBTest {
           ]);
         }
 
+        if ($parameters['Prefix'] === CloudSaveTest::SERVICES_USER_ID . '/') {
+          return new AwsResult([
+            'KeyCount' => 3,
+            'CommonPrefixes' => [
+              ['Prefix' => CloudSaveTest::SERVICES_USER_ID . '/gameA/ps4/1.0.0.1' . $parameters['Delimiter']],
+              ['Prefix' => CloudSaveTest::SERVICES_USER_ID . '/gameB/xbone/1.0.0.2' . $parameters['Delimiter']],
+              ['Prefix' => CloudSaveTest::SERVICES_USER_ID . '/gameC' . $parameters['Delimiter']]
+            ]
+          ]);
+        }
+
         return new AwsResult([
           'KeyCount' => 0
         ]);
@@ -134,6 +146,61 @@ class CloudSaveTest extends AbstractDBTest {
         ],
       ]
     ]);
+  }
+
+  public function testFind() {
+    $user = new UserModel();
+    $user->setId(self::USER_ID);
+
+    $game = new GameModel();
+    $game->setGame(self::GAME_NAME);
+    $game->setCloudSync(true);
+
+    $result = $this->cloudSave->find($user, $game);
+
+    $this->assertContainsOnlyInstancesOf(CloudSaveModel::class, $result);
+    $this->assertCount(1, $result);
+
+    $this->assertEquals(self::SERVICES_USER_ID, $result[0]->getAccountId());
+    $this->assertEquals(self::GAME_NAME, $result[0]->getGame());
+    $this->assertEquals('php-unit', $result[0]->getPlatform());
+    $this->assertEquals('1.0.0.1', $result[0]->getVersion());
+    $this->assertEquals('saveslot1', $result[0]->getSaveSlot());
+    $this->assertEquals(CloudSaveTest::SERVICES_USER_ID . '/' . CloudSaveTest::GAME_NAME . '/php-unit/1.0.0.1/cloud_save_choices/_saveslot1_id.estore', $result[0]->getPrefix());
+    $this->assertEquals('cloud_save_choices', $result[0]->getDirectory());
+    $this->assertEquals('_saveslot1_id.estore', $result[0]->getFilename());
+
+    $this->assertEquals([
+      'game' => self::GAME_NAME,
+      'platform' => 'php-unit',
+      'version' => '1.0.0.1',
+      'save_slot' => 'saveslot1',
+    ], $result[0]->jsonSerialize());
+  }
+
+  public function testFindMultiple() {
+    $user = new UserModel();
+    $user->setId(self::USER_ID);
+
+    $result = $this->cloudSave->find($user);
+
+    $this->assertContainsOnlyInstancesOf(CloudSaveModel::class, $result);
+    $this->assertCount(3, $result);
+
+    $this->assertEquals('ps4', $result[0]->getPlatform());
+    $this->assertEquals('xbone', $result[1]->getPlatform());
+    $this->assertEquals('None', $result[2]->getPlatform());
+    $this->assertEquals('saveslot1', $result[2]->getSaveSlot());
+  }
+
+  public function testFindNoResults() {
+    $user = new UserModel();
+    $user->setId(self::USER_ID - 100);
+
+    $result = $this->cloudSave->find($user);
+
+    $this->assertContainsOnlyInstancesOf(CloudSaveModel::class, $result);
+    $this->assertCount(0, $result);
   }
 
   public function testExists() {

@@ -9,7 +9,7 @@ use Aws\Result as AwsResult;
 class GameConfiguratorTest extends AbstractDBTest {
 
   const USER_ID = 510;
-  const GAME_NAME = 'phpunit_model_tests';
+  const GAME_NAME = 'testgame';
   const NODE_ID = 'phpunit_node_guid';
 
   private $gameConfigurator;
