@@ -60,7 +60,7 @@ class ServicesAccount {
       }
     }
 
-    $statement = $this->pdo->prepare('SELECT id from account WHERE ttg_account_id = :userId ORDER BY created_at DESC LIMIT 1');
+    $statement = $this->pdo->prepare('SELECT id from account WHERE ttg_account_id = :userId AND password != "anonymous" ORDER BY created_at DESC LIMIT 1');
     $statement->execute([
       'userId' => $userId
     ]);
