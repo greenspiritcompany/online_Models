@@ -18,11 +18,32 @@ class ServicesAccount extends Model {
   protected $username;
 
   /**
+   * The "client_login_username".
+   *
+   * @var string.
+  **/
+  protected $client_login_username;
+
+  /**
    * The "ttg_account_id" The auth table id for this user.
    *
    * @var string
   **/
   protected $ttg_account_id;
+
+   /**
+   * The game account "email" for this user.
+   *
+   * @var string
+  **/
+  protected $email;
+
+  /**
+   * The game account "password" for this user.
+   *
+   * @var string
+  **/
+  protected $password;
 
   /**
    * When this record was created
@@ -30,6 +51,13 @@ class ServicesAccount extends Model {
    * @var datetime|null
   **/
   protected $created_at;
+
+  /**
+   * When this record was created
+   *
+   * @var datetime|null
+  **/
+  protected $updated_at;
 
   public function getId() {
     return $this->id;
@@ -40,12 +68,39 @@ class ServicesAccount extends Model {
     return $this;
   }
 
+  public function getEmail() {
+    return $this->email;
+  }
+
+  public function setEmail(string $email): self {
+    $this->email = $email;
+    return $this;
+  }
+
+  public function getPassword() {
+    return $this->password;
+  }
+
+  public function setPassword(string $password): self {
+    $this->password = $password;
+    return $this;
+  }
+
   public function getUsername() {
     return $this->username;
   }
 
   public function setUsername(string $username): self {
     $this->username = $username;
+    return $this;
+  }
+
+  public function getClientLoginUsername() {
+    return $this->client_login_username;
+  }
+
+  public function setClientLoginUsername(string $client_login_username): self {
+    $this->client_login_username = $client_login_username;
     return $this;
   }
 
@@ -67,6 +122,16 @@ class ServicesAccount extends Model {
     return $this->created_at;
   }
 
+  public function setUpdatedAt(string $updated_at): self 
+  {
+    $this->updated_at = $updated_at;
+    return $this;
+  }
+
+  public function getUpdatedAt() {
+    return $this->updated_at;
+  }
+
   /**
    * Returns an array of jsonSerialize values safe to display to the public
    *
@@ -76,8 +141,11 @@ class ServicesAccount extends Model {
     return [
       'id' => $this->getId(),
       'username' => $this->getUsername(),
+      'email' => $this->getEmail(),
+      'client_login_username' => $this->getClientLoginUsername(),
       'ttg_account_id' => $this->getTTGAccountId(),
       'created_at' => $this->getCreatedAt(),
+      'updated_at' => $this->getUpdatedAt(),
     ];
   }
 

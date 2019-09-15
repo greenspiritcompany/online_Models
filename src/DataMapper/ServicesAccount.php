@@ -81,4 +81,55 @@ class ServicesAccount {
     return $accountID;
   }
 
+  public function getByAuthId(int $userId): int {
+
+    $statement = $this->pdo->prepare(
+      'SELECT id, username, email, client_login_username, ttg_account_id, created_at, updated_at 
+      from account 
+      WHERE ttg_account_id = :userId 
+      ORDER BY created_at DESC LIMIT 1');
+      
+    $statement->execute([
+      'userId' => $userId
+    ]);
+
+    $result = $statement->fetch();
+
+    return $result;
+  }
+
+    /**
+    * Update an existing user record using the userId (PK)
+    *
+    * @throws PDOException If user could not be updated
+    * @param UserModel $user
+    * @return bool
+    */
+    public function update(ServiceAccount $serviceAccount) {
+      $serviceAccountId = $serviceAccount->getId();
+  
+      if (!$serviceAccountId) 
+      {
+        throw new PDOException('Unable to update user record', 400);
+      }
+  
+      if (!$serviceAccount->hasUpdates()) 
+      {
+        throw new PDOException('No user updates were made', 409);
+      }
+
+      // Always set last updated at to now
+      $user->setUpdatedAt('now');
+  
+      $queryHelper = $user->queryUpdateHelper();
+  
+      // Add user id a the end of our values array for prepared statement
+      $queryHelper['values'][] = $serviceAccountId;
+  
+      $placeholders = implode(',', array_map(function($key){return "$key=?";}, $queryHelper['keys']));      
+    
+      $statement = $this->pdo->prepare("UPDATE account SET {$placeholders} WHERE id = ?");
+      return $statement->execute($queryHelper['values']);
+    }
+
 }
