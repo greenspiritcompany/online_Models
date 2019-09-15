@@ -119,9 +119,9 @@ class ServicesAccount {
       }
 
       // Always set last updated at to now
-      $user->setUpdatedAt('now');
+      $serviceAccount->setUpdatedAt('now');
   
-      $queryHelper = $user->queryUpdateHelper();
+      $queryHelper = $serviceAccount->queryUpdateHelper();
   
       // Add user id a the end of our values array for prepared statement
       $queryHelper['values'][] = $serviceAccountId;
