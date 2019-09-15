@@ -53,7 +53,7 @@ class ServicesAccount extends Model {
   protected $created_at;
 
   /**
-   * When this record was created
+   * When this record was updated
    *
    * @var datetime|null
   **/

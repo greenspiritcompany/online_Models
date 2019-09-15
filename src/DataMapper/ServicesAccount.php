@@ -81,18 +81,13 @@ class ServicesAccount {
     return $accountID;
   }
 
-  public function getByAuthId(int $userId): int {
+  public function getByAuthId(int $userId) 
+  {
 
-    $statement = $this->pdo->prepare(
-      'SELECT id, username, email, client_login_username, ttg_account_id, created_at, updated_at
-      from account 
-      WHERE ttg_account_id = :userId 
-      ORDER BY created_at DESC LIMIT 1');
+    $statement = $this->pdo->prepare('SELECT id, username, password, email, client_login_username, ttg_account_id, created_at, updated_at FROM account WHERE ttg_account_id = :userId ORDER BY created_at DESC LIMIT 1');
 
     $statement->setFetchMode(PDO::FETCH_CLASS, ServicesAccountModel::class);
-    $statement->execute([
-      'userId' => $userId
-    ]);
+    $statement->execute(['userId' => $userId]);
 
     $result = $statement->fetch();
 
