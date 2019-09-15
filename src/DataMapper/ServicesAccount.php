@@ -111,15 +111,13 @@ class ServicesAccount {
       $queryHelper = $serviceAccount->queryUpdateHelper();
 
       if (!($queryHelper['keys'] && $id)) {
-        throw new PDOException('No Vanilla user fields to update');
+        throw new PDOException('No ServiceAccount fields to update');
       }
   
       // Add user id a the end of our values array for prepared statement
       $queryHelper['values'][] = $id;
   
       $placeholders = implode(',', array_map(function($key){return "$key=?";}, $queryHelper['keys']));
-
-      $placeholders .= ',updated_at=NOW()';  
     
       $statement = $this->pdo->prepare("UPDATE account SET {$placeholders} WHERE id = ?");
       return $statement->execute($queryHelper['values']);

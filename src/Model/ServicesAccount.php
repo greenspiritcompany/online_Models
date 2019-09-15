@@ -73,7 +73,7 @@ class ServicesAccount extends Model {
   }
 
   public function setEmail(string $email): self {
-    $this->email = $email;
+    $this->updateField('email', $email);
     return $this;
   }
 
@@ -82,7 +82,7 @@ class ServicesAccount extends Model {
   }
 
   public function setPassword(string $password): self {
-    $this->password = $password;
+    $this->updateField('password', $password);
     return $this;
   }
 
@@ -91,7 +91,7 @@ class ServicesAccount extends Model {
   }
 
   public function setUsername(string $username): self {
-    $this->username = $username;
+    $this->updateField('username', $username);
     return $this;
   }
 
@@ -100,7 +100,7 @@ class ServicesAccount extends Model {
   }
 
   public function setClientLoginUsername(string $client_login_username): self {
-    $this->client_login_username = $client_login_username;
+    $this->updateField('client_login_username', $client_login_username);
     return $this;
   }
 
@@ -124,7 +124,7 @@ class ServicesAccount extends Model {
 
   public function setUpdatedAt(string $updated_at): self 
   {
-    $this->updated_at = $updated_at;
+    $this->updateField('updated_at', $updated_at);
     return $this;
   }
 
