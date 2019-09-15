@@ -103,19 +103,25 @@ class ServicesAccount {
     */
     public function update(ServicesAccountModel $serviceAccount) 
     {
-      $serviceAccountId = $serviceAccount->getId();
+      $id = $serviceAccount->getId();
   
       // Always set last updated at to now
       $serviceAccount->setUpdatedAt('now');
   
       $queryHelper = $serviceAccount->queryUpdateHelper();
+
+      if (!($queryHelper['keys'] && $id)) {
+        throw new PDOException('No Vanilla user fields to update');
+      }
   
       // Add user id a the end of our values array for prepared statement
-      $queryHelper['values'][] = $serviceAccountId;
+      $queryHelper['values'][] = $id;
   
-      $placeholders = implode(',', array_map(function($key){return "$key=?";}, $queryHelper['keys']));      
+      $placeholders = implode(',', array_map(function($key){return "$key=?";}, $queryHelper['keys']));
+
+      $placeholders .= ',updated_at=NOW()';  
     
-      $statement = $this->pdo->prepare('UPDATE account SET {$placeholders} WHERE id = '.$serviceAccountId);
+      $statement = $this->pdo->prepare("UPDATE account SET {$placeholders} WHERE id = ?");
       return $statement->execute($queryHelper['values']);
     }
 
