@@ -98,22 +98,13 @@ class ServicesAccount {
     * Update an existing user record using the userId (PK)
     *
     * @throws PDOException If user could not be updated
-    * @param UserModel $user
+    * @param ServicesAccountModel $serviceAccount
     * @return bool
     */
-    public function update(ServicesAccountModel $serviceAccount) {
+    public function update(ServicesAccountModel $serviceAccount) 
+    {
       $serviceAccountId = $serviceAccount->getId();
   
-      if (!$serviceAccountId) 
-      {
-        throw new PDOException('Unable to update user record', 400);
-      }
-  
-      if (!$serviceAccount->hasUpdates()) 
-      {
-        throw new PDOException('No user updates were made', 409);
-      }
-
       // Always set last updated at to now
       $serviceAccount->setUpdatedAt('now');
   
