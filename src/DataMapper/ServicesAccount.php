@@ -115,7 +115,7 @@ class ServicesAccount {
   
       $placeholders = implode(',', array_map(function($key){return "$key=?";}, $queryHelper['keys']));      
     
-      $statement = $this->pdo->prepare("UPDATE account SET {$placeholders} WHERE id = ?");
+      $statement = $this->pdo->prepare('UPDATE account SET {$placeholders} WHERE id = '.$serviceAccountId);
       return $statement->execute($queryHelper['values']);
     }
 
