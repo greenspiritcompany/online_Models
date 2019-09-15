@@ -89,6 +89,7 @@ class ServicesAccount {
       WHERE ttg_account_id = :userId 
       ORDER BY created_at DESC LIMIT 1');
 
+    $statement->setFetchMode(PDO::FETCH_CLASS, ServicesAccountModel::class);
     $statement->execute([
       'userId' => $userId
     ]);
