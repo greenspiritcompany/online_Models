@@ -84,11 +84,11 @@ class ServicesAccount {
   public function getByAuthId(int $userId): int {
 
     $statement = $this->pdo->prepare(
-      'SELECT id, username, email, client_login_username, ttg_account_id, created_at, updated_at 
+      'SELECT id, username, email, client_login_username, ttg_account_id, created_at, updated_at
       from account 
       WHERE ttg_account_id = :userId 
       ORDER BY created_at DESC LIMIT 1');
-      
+
     $statement->execute([
       'userId' => $userId
     ]);
