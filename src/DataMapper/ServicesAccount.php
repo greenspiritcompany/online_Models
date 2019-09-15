@@ -106,7 +106,7 @@ class ServicesAccount {
     * @param UserModel $user
     * @return bool
     */
-    public function update(ServiceAccount $serviceAccount) {
+    public function update(ServicesAccountModel $serviceAccount) {
       $serviceAccountId = $serviceAccount->getId();
   
       if (!$serviceAccountId) 
