@@ -17,7 +17,7 @@ class AdminUser {
     $this->pdo = $pdo;
     $this->cache = $cachePool;
   }
-  // Ignore this comment, just checking to make sure api is syncing models
+  
   /**
     * Get a single admin user from cache by their username
     * Returns false if no record is found
