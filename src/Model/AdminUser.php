@@ -54,6 +54,17 @@ class AdminUser implements \JsonSerializable {
     return $this;
   }
 
+  public function generateSessionId($length = 32) 
+  {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $charactersLength = strlen($characters);
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
+    }
+    $this->jiraSession = $randomString;
+  }
+
   public function getPermissions(): array {
     return (array)$this->permissions;
   }
