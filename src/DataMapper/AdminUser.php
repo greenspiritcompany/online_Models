@@ -75,7 +75,7 @@ class AdminUser {
 
     $username = $user->getUsername();
     
-    $cacheItem = $this->cache->getItem(self::CACHE_NAMESPACE . $username);
+    $cacheItem = $this->cache->getItem(self::CACHE_NAMESPACE . $email);
 
     // Store in DB
     $statement = $this->pdo->prepare(
@@ -113,13 +113,13 @@ class AdminUser {
     */
   public function fromToken(string $token): AdminUserModel {
 
-    list($username, $time, $hash) = explode(',', $token);
+    list($email, $username, $time, $hash) = explode(',', $token);
 
     if (!($username && !is_numeric($username) && $time && $hash)) {
       throw new \Exception('Invalid User Admin Token', 400);
     }
 
-    $user = $this->get($username);
+    $user = $this->get($email);
 
     if (!$user) {
       throw new \Exception('Session Expired', 401);

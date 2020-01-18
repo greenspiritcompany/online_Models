@@ -75,8 +75,8 @@ class AdminUser implements \JsonSerializable {
 
   public function authToken(string $time = '') {
     $time = $time ?: time();
-    $toHash = $this->username . ',' . $time . ',' . $this->jiraSession;
-    return $this->username . ',' . $time . ',' . hash_hmac('SHA256', $toHash, getenv('AUTH_TOKEN_KEY'));
+    $toHash = $this->email . ',' . $this->username . ',' . $time . ',' . $this->jiraSession;
+    return $this->email . ',' . $this->username . ',' . $time . ',' . hash_hmac('SHA256', $toHash, getenv('AUTH_TOKEN_KEY'));
   }
 
   public function jsonSerialize() {
