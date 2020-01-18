@@ -3,7 +3,10 @@ namespace Telltale\Model;
 
 class AdminUser implements \JsonSerializable {
 
-  // Jira username
+  // TTG Account Email
+  private $email;
+
+  // Jira username - Obsolete
   private $username;
   
   // Jira fullname
@@ -14,6 +17,15 @@ class AdminUser implements \JsonSerializable {
 
   // Permissions from shared/admin_entitlement_types
   private $permissions = [];
+
+  public function getEmail() {
+    return $this->email;
+  }
+
+  public function setEmail(string $email): self {
+    $this->email = strtolower($email);
+    return $this;
+  }
 
   public function getUsername() {
     return $this->username;

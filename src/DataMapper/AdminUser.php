@@ -35,7 +35,7 @@ class AdminUser {
     // Try the database
     if (!$cacheHit) {
       $statement = $this->pdo->prepare(
-        'SELECT username, fullname as name, jira_session as jiraSession
+        'SELECT email, username, fullname as name, jira_session as jiraSession
         FROM admin_user WHERE username = :username'
       );
 
@@ -71,19 +71,23 @@ class AdminUser {
     * @return UserModel
     */
   public function store(AdminUserModel $user) {
+    $email = $user->getEmail();
+
     $username = $user->getUsername();
+    
     $cacheItem = $this->cache->getItem(self::CACHE_NAMESPACE . $username);
 
     // Store in DB
     $statement = $this->pdo->prepare(
-      'INSERT INTO admin_user (username, fullname, jira_session)
-      VALUES (:username, :name, :jira_session)
+      'INSERT INTO admin_user (email, username, fullname, jira_session)
+      VALUES (:email, :username, :name, :jira_session)
       ON DUPLICATE KEY UPDATE updated_at = NOW(), jira_session = :jira_session_update'
     );
 
     $jiraSession = $user->getJiraSession();
 
     $statement->execute([
+      'email' => $email,
       'username' => $username,
       'name' => $user->getName(),
       'jira_session' => $jiraSession,
