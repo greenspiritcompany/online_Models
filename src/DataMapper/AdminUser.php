@@ -78,7 +78,7 @@ class AdminUser {
 
     $username = $user->getUsername();
     
-    $cacheItem = $this->cache->getItem(self::CACHE_NAMESPACE . $email);
+    //i$cacheItem = $this->cache->getItem(self::CACHE_NAMESPACE . $email);
 
     // Store in DB
     $statement = $this->pdo->prepare(
