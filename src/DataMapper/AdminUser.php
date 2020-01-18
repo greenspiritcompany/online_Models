@@ -25,8 +25,8 @@ class AdminUser {
     * @param string $username
     * @return AdminUserModel|bool
     */
-  public function get(string $username) {
-    $cacheItem = $this->cache->getItem(self::CACHE_NAMESPACE . $username);
+  public function get(string $email) {
+    $cacheItem = $this->cache->getItem(self::CACHE_NAMESPACE . $email);
 
     // User in cache?
     $user = $cacheItem->get();
@@ -36,11 +36,11 @@ class AdminUser {
     if (!$cacheHit) {
       $statement = $this->pdo->prepare(
         'SELECT email, username, fullname as name, jira_session as jiraSession
-        FROM admin_user WHERE username = :username'
+        FROM admin_user WHERE email = :email'
       );
 
       $statement->setFetchMode(PDO::FETCH_CLASS, AdminUserModel::class);
-      $statement->execute(['username' => $username]);
+      $statement->execute(['email' => $email]);
       $user = $statement->fetch();
     }
 
