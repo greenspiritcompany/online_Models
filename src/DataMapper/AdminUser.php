@@ -25,15 +25,16 @@ class AdminUser {
     * @param string $username
     * @return AdminUserModel|bool
     */
-  public function get(string $email) {
-    $cacheItem = $this->cache->getItem(self::CACHE_NAMESPACE . $email);
+  public function get(string $email) 
+  {
+    //$cacheItem = $this->cache->getItem(self::CACHE_NAMESPACE . $email);
 
     // User in cache?
-    $user = $cacheItem->get();
-    $cacheHit = $cacheItem->isHit();
+    //$user = $cacheItem->get();
+    //$cacheHit = $cacheItem->isHit();
 
     // Try the database
-    if (!$cacheHit) {
+    //if (!$cacheHit) {
       $statement = $this->pdo->prepare(
         'SELECT email, username, fullname as name, jira_session as jiraSession
         FROM admin_user WHERE email = :email'
@@ -42,13 +43,14 @@ class AdminUser {
       $statement->setFetchMode(PDO::FETCH_CLASS, AdminUserModel::class);
       $statement->execute(['email' => $email]);
       $user = $statement->fetch();
-    }
+    //}
 
     // If user has no permissions always check if some were added
     if ($user instanceof AdminUserModel && !$user->getPermissions()) {
       $user = $this->getPermissions($user);
     }
 
+    /*
     if (!$cacheHit) {
       // Set user cache length
       $exp = new \DateInterval('P1D');
@@ -58,6 +60,7 @@ class AdminUser {
       $cacheItem->set($user);
       $this->cache->save($cacheItem);
     }
+    */
 
     return $user;
   }
@@ -95,12 +98,12 @@ class AdminUser {
     ]);
 
     // Set user cache length
-    $exp = new \DateInterval('P1D');
-    $cacheItem->expiresAfter($exp);
+    //$exp = new \DateInterval('P1D');
+    //$cacheItem->expiresAfter($exp);
 
     // Save user into cache
-    $cacheItem->set($user);
-    $this->cache->save($cacheItem);
+    //$cacheItem->set($user);
+    //$this->cache->save($cacheItem);
     return $user;
   }
 
