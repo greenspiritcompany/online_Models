@@ -379,12 +379,12 @@ class User extends Model {
    *
    * @return string
    **/
-  public function authToken(string $time = '', string $abtoken = NULL): string {
+  public function authToken(string $time = ''): string {
     $time = $time ?: time();
     $payload = $this->getId() . ',' . $time;
     $toHash = $payload . ',' . $this->getPassword();
     $token = $payload . ',' . hash_hmac('SHA256', $toHash, getenv('AUTH_TOKEN_KEY'));
-    if(isset($abtoken)) {
+    if(isset($this->abtoken)) {
       $token = $token . ',' . $abtoken;
     }
     return $token
