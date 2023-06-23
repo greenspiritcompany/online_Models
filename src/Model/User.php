@@ -385,9 +385,9 @@ class User extends Model {
     $toHash = $payload . ',' . $this->getPassword();
     $token = $payload . ',' . hash_hmac('SHA256', $toHash, getenv('AUTH_TOKEN_KEY'));
     if(isset($this->abtoken)) {
-      $token = $token . ',' . $abtoken;
+      $token = $token . ',' . $this->abtoken;
     }
-    return $token
+    return $token;
   }
 
   /**
