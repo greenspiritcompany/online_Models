@@ -214,7 +214,7 @@ class User {
     // $userId: TTG user id from the auth/users table
     // $time: When the token was issued
     // $hash: Used to sign the token
-    list($userId, $time, $hash) = array_pad(explode(',', $token), 3, 0);
+    list($userId, $time, $hash, $abtoken) = array_pad(explode(',', $token), 4, 0);
 
     if (!((int)$userId > 0 && $time && $hash)) {
       throw new \Exception('Invalid User Token', 400);
@@ -235,6 +235,10 @@ class User {
     $expectedToken = $user->authToken($time);
     if (!hash_equals($expectedToken, $token)) {
       throw new \Exception('Token Validation Failed', 401);
+    }
+
+    if($abtoken) {
+      $user->abtoken = $abtoken;
     }
 
     return $user;

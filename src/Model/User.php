@@ -139,6 +139,9 @@ class User extends Model {
   // Allow validation to be disabled for legacy records
   public $validate = true;
 
+  // Only protected properties are persisted to the model.
+  public $abtoken;
+
   public function getId(): int {
     return (int)$this->id;
   }
@@ -376,11 +379,15 @@ class User extends Model {
    *
    * @return string
    **/
-  public function authToken(string $time = ''): string {
+  public function authToken(string $time = '', string $abtoken = NULL): string {
     $time = $time ?: time();
     $payload = $this->getId() . ',' . $time;
     $toHash = $payload . ',' . $this->getPassword();
-    return $payload . ',' . hash_hmac('SHA256', $toHash, getenv('AUTH_TOKEN_KEY'));
+    $token = $payload . ',' . hash_hmac('SHA256', $toHash, getenv('AUTH_TOKEN_KEY'));
+    if(isset($abtoken)) {
+      $token = $token . ',' . $abtoken;
+    }
+    return $token
   }
 
   /**
