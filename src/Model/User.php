@@ -141,6 +141,7 @@ class User extends Model {
 
   // Only protected properties are persisted to the model.
   public $abtoken;
+  public $abrefresh;
 
   public function getId(): int {
     return (int)$this->id;
@@ -385,7 +386,7 @@ class User extends Model {
     $toHash = $payload . ',' . $this->getPassword();
     $token = $payload . ',' . hash_hmac('SHA256', $toHash, getenv('AUTH_TOKEN_KEY'));
     if(isset($this->abtoken)) {
-      $token = $token . ',' . $this->abtoken;
+      $token = $token . ',' . $this->abtoken . ',' . $this->abrefresh;
     }
     return $token;
   }
