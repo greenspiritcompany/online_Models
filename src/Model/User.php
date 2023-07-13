@@ -305,7 +305,7 @@ class User extends Model {
    * @return bool
    **/
   public function isVerified(): bool {
-    return !empty($this->email_verify) && $this-email_verify != '00-00-0000 00:00:00';
+    return !empty($this->email_verify) && $this->email_verify != '00-00-0000 00:00:00';
   }
 
   /**
