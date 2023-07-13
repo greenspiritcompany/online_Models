@@ -231,18 +231,18 @@ class User {
       throw new \Exception('Account Disabled', 403);
     }
 
-    // Token must still match the user's
-    $expectedToken = $user->authToken($time);
-    if (!hash_equals($expectedToken, $token)) {
-      throw new \Exception('Token Validation Failed', 401);
-    }
-
     if($abtoken) {
       $user->abtoken = $abtoken;
     }
 
     if($abrefresh) {
       $user->abrefresh = $abrefresh;
+    }
+
+    // Token must still match the user's
+    $expectedToken = $user->authToken($time);
+    if (!hash_equals($expectedToken, $token)) {
+      throw new \Exception('Token Validation Failed', 401);
     }
 
     return $user;
